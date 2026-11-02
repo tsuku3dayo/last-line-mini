@@ -1,5 +1,6 @@
 import { GROUND_Y, LOGICAL_HEIGHT, LOGICAL_WIDTH, MOUND_TOP_Y } from '../core/config';
 import { blastRadius, type Blast } from '../core/blast';
+import { enemyHead, IMPACT_STEPS, type EnemyMissile, type Impact } from '../core/enemy';
 import type { GameState } from '../core/game';
 import { interceptorPosition, type Interceptor } from '../core/interceptor';
 import { groundProfile } from '../core/terrain';
@@ -89,6 +90,28 @@ function drawBlast(ctx: CanvasRenderingContext2D, b: Blast, step: number): void 
   ctx.stroke();
 }
 
+/** 敵の通常弾：上端から弾頭までの赤橙の航跡と、白い弾頭（LLM-GUI-0001 §2） */
+function drawEnemy(ctx: CanvasRenderingContext2D, m: EnemyMissile): void {
+  const h = enemyHead(m);
+  ctx.strokeStyle = COLORS.enemyTrail;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(m.fromX, m.fromY);
+  ctx.lineTo(h.x, h.y);
+  ctx.stroke();
+  ctx.fillStyle = COLORS.enemyHead;
+  ctx.fillRect(Math.round(h.x) - 1, Math.round(h.y) - 1, 2, 2);
+}
+
+/** 敵が地面に着いた跡の小さな閃光（LLM-GUI-0001 §4：0.2 秒） */
+function drawImpact(ctx: CanvasRenderingContext2D, i: Impact): void {
+  const r = 3 + 3 * (1 - i.age / IMPACT_STEPS);
+  ctx.fillStyle = COLORS.blast[0];
+  ctx.beginPath();
+  ctx.arc(i.x, i.y - 2, r, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 /** 照準：白い「＋」（LLM-GUI-0001 §2） */
 function drawCursor(ctx: CanvasRenderingContext2D, x: number, y: number): void {
   const cx = Math.round(x);
@@ -114,6 +137,8 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, view: { 
     drawText(ctx, String(base.ammo), base.x, GROUND_Y + 14, base.ammo > 0 ? COLORS.ammo : COLORS.ammoEmpty, FONT_SCALE, 'center');
   }
 
+  for (const m of state.enemies) drawEnemy(ctx, m);
+  for (const i of state.impacts) drawImpact(ctx, i);
   for (const m of state.interceptors) drawInterceptor(ctx, m);
   for (const b of state.blasts) drawBlast(ctx, b, state.step);
   drawCursor(ctx, state.cursor.x, state.cursor.y);
