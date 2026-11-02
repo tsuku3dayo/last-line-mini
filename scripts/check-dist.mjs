@@ -1,4 +1,6 @@
 // build したもの（dist）の検査。テンプレート §6.3 ＋ 原作の名前が入っていないこと（完成の定義）。
+// LLM-TC-9001-03（base・外部の URL・原作の名前）、LLM-TC-9001-04（チャンネルごとの名前・アイコン・キャッシュ名）、
+// LLM-TC-9001-05（本番の SW はプレビューを扱わない）
 // 使い方：node scripts/check-dist.mjs [--channel production|preview] [--dir dist]
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, relative } from 'node:path';

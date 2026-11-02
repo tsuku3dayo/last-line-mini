@@ -14,7 +14,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "check:dist": "node scripts/check-dist.mjs",
-    "verify": "npm run lint && npm run test && npm run build && npm run check:dist"
+    "check:docs": "node scripts/check-docs.mjs",
+    "verify": "npm run lint && npm run test && npm run build && npm run check:dist && npm run check:docs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

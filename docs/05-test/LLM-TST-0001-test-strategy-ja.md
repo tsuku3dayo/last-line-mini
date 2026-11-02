@@ -3,7 +3,7 @@ id: LLM-TST-0001
 type: test-strategy
 title: 最終防衛線ミニ テスト戦略
 status: stable
-version: 1.0
+version: 1.1
 updated: 2026-11-02
 sources:
   - LLM-SA-0001（v1.0）
@@ -20,7 +20,7 @@ verified: null
 | 単体 | Vitest（`tests/unit/`） | core のすべて、storage、render・app の純粋な関数、層の決まり、`channels.mjs` | 手元の `npm run verify`、CI |
 | E2E | Playwright（`e2e/`） | build したプレビュー用の dist を `vite preview` で動かす | 手元、CI（Playwright のコンテナ） |
 | dist の検査 | `scripts/check-dist.mjs` | base・外部の URL・名前・原作の名前が入っていないこと | 手元の verify、CI |
-| 文書の検査 | `scripts/check-docs.mjs`（LLM-TASK-0003 で作る） | ID・sources・確認 ID のつながり | 手元の verify、CI |
+| 文書の検査 | `scripts/check-docs.mjs`（`--strict` はプロダクトゴールを確かめるリリースで） | ID・sources・確認 ID のつながり（TEAM 4.5） | 手元の verify、CI |
 | 手動 | 実機（PC の Chrome、iPhone 11） | 見た目・手触り・fps・ホーム画面のアプリ | PBI の最後の TASK のあと（OPTION 6.5） |
 
 ## 2. E2E の端末
