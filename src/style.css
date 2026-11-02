@@ -1,0 +1,33 @@
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #000;
+  color: #e0e0e0;
+  font-family: system-ui, sans-serif;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#screen {
+  background: #05070f;
+  image-rendering: pixelated;
+}
+
+#app-version {
+  position: fixed;
+  right: 8px;
+  bottom: 4px;
+  font-size: 11px;
+  color: #6b7280;
+}
