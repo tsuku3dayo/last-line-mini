@@ -1,0 +1,65 @@
+name: Pages
+
+# main へのマージ → プレビュー（/preview/）を新しくする
+# リリースのタグ v* → 本番（/）を新しくする
+# どちらのときも、本番（最新のタグ）とプレビュー（main）をまとめて 1 つの公開物にする（LLM-ADR-0001）
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm run verify
+
+  e2e:
+    runs-on: ubuntu-latest
+    container: { image: mcr.microsoft.com/playwright:v1.64.1-noble }
+    env:
+      HOME: /root
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - run: npm run test:e2e
+
+  build:
+    needs: [verify, e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 } # タグと main の履歴がすべて要る
+      - run: git fetch --force --tags origin main:refs/remotes/origin/main
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: bash scripts/build-pages.sh
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: site }
+
+  deploy:
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

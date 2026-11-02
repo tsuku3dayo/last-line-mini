@@ -1,4 +1,5 @@
 import './style.css';
+import { setupPwa } from './app/pwa';
 import { formatVersion } from './app/version';
 
 // 組み立て。ゲームの骨組み（ループ・描画・入力）は LLM-TASK-0004 で足す。
@@ -10,3 +11,5 @@ if (versionEl) versionEl.textContent = versionText;
 document.body.dataset.version = versionText;
 document.body.dataset.channel = __APP_CHANNEL__;
 document.body.dataset.screen = 'boot';
+
+setupPwa();

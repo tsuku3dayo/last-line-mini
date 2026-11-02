@@ -3,6 +3,7 @@ docs/spec/*.png
 
 node_modules/
 dist/
+site/
 coverage/
 playwright-report/
 test-results/

@@ -42,6 +42,36 @@ const title = /<title>([^<]*)<\/title>/.exec(html)?.[1];
 if (title !== config.name) errors.push(`<title> が ${config.name} でない: ${title}`);
 if (!html.includes(`content="${config.name}"`)) errors.push(`apple-mobile-web-app-title が ${config.name} でない`);
 
+// PWA（LLM-TC-9001-04・05）
+const iconDir = `${config.base}icons/${channel}/`;
+if (!html.includes(`href="${iconDir}icon-180.png"`)) errors.push(`apple-touch-icon が ${iconDir}icon-180.png でない`);
+const manifestPath = join(dir, 'manifest.webmanifest');
+if (!existsSync(manifestPath)) {
+  errors.push('manifest.webmanifest がない');
+} else {
+  const m = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  const expect = { name: config.name, short_name: config.shortName, scope: config.base, start_url: config.base, id: config.base };
+  for (const [k, v] of Object.entries(expect)) {
+    if (m[k] !== v) errors.push(`manifest の ${k} が ${v} でない: ${m[k]}`);
+  }
+  for (const icon of m.icons ?? []) {
+    if (!String(icon.src).startsWith(`icons/${channel}/`)) errors.push(`manifest のアイコンがチャンネル（${channel}）のものでない: ${icon.src}`);
+    if (!existsSync(join(dir, icon.src))) errors.push(`manifest のアイコンがない: ${icon.src}`);
+  }
+}
+const swPath = join(dir, 'sw.js');
+if (!existsSync(swPath)) {
+  errors.push('sw.js がない');
+} else {
+  const sw = readFileSync(swPath, 'utf8');
+  if (!sw.includes(`"${config.appId}"`)) errors.push(`sw.js のキャッシュ名に ${config.appId} が入っていない`);
+  // ほかのチャンネルのアイコンをキャッシュしない
+  const other = channel === 'production' ? 'preview' : 'production';
+  if (sw.includes(`icons/${other}/`)) errors.push(`sw.js が ${other} のアイコンをキャッシュしている`);
+  // 本番の SW はプレビューのページを扱わない（LLM-SA-0001 §2）
+  if (channel === 'production' && !sw.includes('\\/preview\\/')) errors.push('本番の sw.js の navigateFallbackDenylist に /preview/ がない');
+}
+
 for (const file of walk(dir)) {
   if (!TEXT_EXT.has(extname(file))) continue;
   const text = readFileSync(file, 'utf8');
