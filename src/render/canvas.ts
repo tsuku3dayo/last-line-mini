@@ -56,6 +56,17 @@ function drawCity(ctx: CanvasRenderingContext2D, x: number): void {
   }
 }
 
+/** 照準：白い「＋」（LLM-GUI-0001 §2） */
+function drawCursor(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  const cx = Math.round(x);
+  const cy = Math.round(y);
+  ctx.fillStyle = COLORS.cursor;
+  ctx.fillRect(cx - 6, cy - 1, 5, 2);
+  ctx.fillRect(cx + 1, cy - 1, 5, 2);
+  ctx.fillRect(cx - 1, cy - 6, 2, 5);
+  ctx.fillRect(cx - 1, cy + 1, 2, 5);
+}
+
 /** 1 回分を描く。ctx は論理座標（480 × 640）に変換済みであること */
 export function render(ctx: CanvasRenderingContext2D, state: GameState, view: { score: number; topScore: number }): void {
   ctx.fillStyle = COLORS.sky;
@@ -69,6 +80,8 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, view: { 
   for (const base of state.bases) {
     drawText(ctx, String(base.ammo), base.x, GROUND_Y + 14, base.ammo > 0 ? COLORS.ammo : COLORS.ammoEmpty, FONT_SCALE, 'center');
   }
+
+  drawCursor(ctx, state.cursor.x, state.cursor.y);
 
   // HUD（y = 8〜24）
   drawText(ctx, hud1pText(view.score), 8, 8, COLORS.hud1p);

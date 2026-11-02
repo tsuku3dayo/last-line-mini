@@ -34,6 +34,8 @@ body {
 /* ゲーム画面。位置と大きさは src/app/layout.ts が決める */
 #stage {
   position: absolute;
+  /* ゲーム画面の上では、マウスの矢印の代わりに照準を出す */
+  cursor: none;
 }
 
 #screen {
