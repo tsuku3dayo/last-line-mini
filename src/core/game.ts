@@ -1,6 +1,7 @@
 import { stepBlasts, type Blast } from './blast';
 import { AMMO_PER_BASE, BASE_XS, CITY_XS } from './config';
 import { INITIAL_CURSOR, stepCursor, type Cursor, type MoveDir } from './cursor';
+import { spawnEnemy, stepEnemies, stepImpacts, type EnemyMissile, type Impact } from './enemy';
 import { launch, stepInterceptors, type Interceptor } from './interceptor';
 import { seedState } from './random';
 
@@ -25,6 +26,9 @@ export interface GameState {
   readonly cities: readonly City[];
   readonly interceptors: readonly Interceptor[];
   readonly blasts: readonly Blast[];
+  readonly enemies: readonly EnemyMissile[];
+  /** 敵が地面に着いた跡の閃光 */
+  readonly impacts: readonly Impact[];
 }
 
 /** 3 つの基地の発射ボタン（A・B・C）。押した瞬間だけ true */
@@ -51,6 +55,8 @@ export function createGame(seed: number): GameState {
     cities: CITY_XS.map((x) => ({ x, alive: true })),
     interceptors: [],
     blasts: [],
+    enemies: [],
+    impacts: [],
   };
 }
 
@@ -65,19 +71,26 @@ function fire(bases: readonly Base[], buttons: FireButtons, target: { x: number;
   return { bases: next, launched };
 }
 
-/** 1 ステップ進める。順番：照準 → 発射 → 迎撃ミサイル → 爆風 */
+/** 1 ステップ進める。順番：照準 → 発射 → 迎撃ミサイル → 爆風 → 敵が出る → 敵が動く（爆風で消える・地面に着く） */
 export function step(state: GameState, input: StepInput): GameState {
   const cursor = stepCursor(state.cursor, input.move, input.pointer);
   const fired = fire(state.bases, input.fire, cursor);
   const moved = stepInterceptors([...state.interceptors, ...fired.launched]);
   // 着いた迎撃ミサイルは、その場で爆風になる（age 0 から）
   const newBlasts = moved.arrived.map((m) => ({ x: m.toX, y: m.toY, age: 0 }));
+  const blasts = [...stepBlasts(state.blasts), ...newBlasts];
+  const spawned = spawnEnemy(state.step, state.rng);
+  const enemies = stepEnemies(spawned.enemy ? [...state.enemies, spawned.enemy] : state.enemies, blasts);
+  const landedAt = enemies.landed.map((m) => ({ x: m.toX, y: m.toY, age: 0 }));
   return {
     ...state,
     step: state.step + 1,
     cursor,
     bases: fired.bases,
+    rng: spawned.rng,
     interceptors: moved.flying,
-    blasts: [...stepBlasts(state.blasts), ...newBlasts],
+    blasts,
+    enemies: enemies.flying,
+    impacts: [...stepImpacts(state.impacts), ...landedAt],
   };
 }
