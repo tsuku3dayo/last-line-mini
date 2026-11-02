@@ -1,0 +1,11 @@
+# 原作のスクリーンショット（権利のため公開リポジトリに入れない。LLM-IDK-0001 心配ごと②）
+docs/spec/*.png
+
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+*.log
+.DS_Store
+Thumbs.db
