@@ -1,10 +1,11 @@
 import './style.css';
 import { chooseSeed, exposeDebugApi, readDebugParams } from './app/debug';
+import { createInput } from './app/input';
 import { watchLayout } from './app/layout';
 import { startLoop } from './app/loop';
 import { setupPwa } from './app/pwa';
 import { formatVersion } from './app/version';
-import { createGame, NO_INPUT, step, type GameState, type StepInput } from './core/game';
+import { createGame, step, type GameState, type StepInput } from './core/game';
 import { render } from './render/canvas';
 
 // 組み立て（ここだけが全部の層を知る）。タイトル画面は LLM-PBI-0006 で足すので、今は開くとすぐプレイが始まる
@@ -25,9 +26,11 @@ if (!ctx) throw new Error('Canvas 2D が使えない');
 const { debug, seed: fixedSeed } = readDebugParams(location.search);
 let state: GameState = createGame(chooseSeed(fixedSeed));
 let transform = { scale: 1, dpr: 1 };
+const input = createInput(stage);
 
-const advanceBy = (steps: number, input: StepInput = NO_INPUT) => {
-  for (let i = 0; i < steps; i++) state = step(state, input);
+// 入力を渡さなければ、キーボード・マウスから読む
+const advanceBy = (steps: number, given?: StepInput) => {
+  for (let i = 0; i < steps; i++) state = step(state, given ?? input.read());
   return state;
 };
 
@@ -57,8 +60,8 @@ if (debug) {
     },
     freeze: () => loop.freeze(),
     unfreeze: () => loop.unfreeze(),
-    advance: (steps, input) => {
-      const s = advanceBy(steps, input);
+    advance: (steps, given) => {
+      const s = advanceBy(steps, given);
       draw();
       return s;
     },
