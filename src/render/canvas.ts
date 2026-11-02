@@ -1,5 +1,7 @@
 import { GROUND_Y, LOGICAL_HEIGHT, LOGICAL_WIDTH, MOUND_TOP_Y } from '../core/config';
+import { blastRadius, type Blast } from '../core/blast';
 import type { GameState } from '../core/game';
+import { interceptorPosition, type Interceptor } from '../core/interceptor';
 import { groundProfile } from '../core/terrain';
 import { COLORS } from './colors';
 import { textPixels, textWidth } from './font';
@@ -56,6 +58,37 @@ function drawCity(ctx: CanvasRenderingContext2D, x: number): void {
   }
 }
 
+/** 迎撃ミサイル：発射した点から今の位置までの緑の軌跡と、着く場所の目印（緑の「×」） */
+function drawInterceptor(ctx: CanvasRenderingContext2D, m: Interceptor): void {
+  const p = interceptorPosition(m);
+  ctx.strokeStyle = COLORS.interceptor;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(m.fromX, m.fromY);
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+  ctx.fillStyle = COLORS.enemyHead;
+  ctx.fillRect(Math.round(p.x) - 1, Math.round(p.y) - 1, 2, 2);
+  const tx = Math.round(m.toX);
+  const ty = Math.round(m.toY);
+  ctx.fillStyle = COLORS.interceptor;
+  for (let d = -3; d <= 3; d++) {
+    ctx.fillRect(tx + d, ty + d, 1, 1);
+    ctx.fillRect(tx + d, ty - d, 1, 1);
+  }
+}
+
+/** 爆風：1 ステップごとに色が変わる輪（LLM-GUI-0001 §2。塗りつぶしの白い円は使わない） */
+function drawBlast(ctx: CanvasRenderingContext2D, b: Blast, step: number): void {
+  const r = blastRadius(b.age);
+  if (r <= 0) return;
+  ctx.strokeStyle = COLORS.blast[step % COLORS.blast.length] ?? COLORS.blast[0];
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(b.x, b.y, Math.max(1, r - 1.5), 0, Math.PI * 2);
+  ctx.stroke();
+}
+
 /** 照準：白い「＋」（LLM-GUI-0001 §2） */
 function drawCursor(ctx: CanvasRenderingContext2D, x: number, y: number): void {
   const cx = Math.round(x);
@@ -81,6 +114,8 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, view: { 
     drawText(ctx, String(base.ammo), base.x, GROUND_Y + 14, base.ammo > 0 ? COLORS.ammo : COLORS.ammoEmpty, FONT_SCALE, 'center');
   }
 
+  for (const m of state.interceptors) drawInterceptor(ctx, m);
+  for (const b of state.blasts) drawBlast(ctx, b, state.step);
   drawCursor(ctx, state.cursor.x, state.cursor.y);
 
   // HUD（y = 8〜24）

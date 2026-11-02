@@ -1,6 +1,6 @@
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../core/config';
 import type { MoveDir } from '../core/cursor';
-import type { StepInput } from '../core/game';
+import type { FireButtons, StepInput } from '../core/game';
 
 /** 画面の位置（CSS ピクセル）を、ゲーム画面の論理座標に直す */
 export function toLogical(clientX: number, clientY: number, rect: { left: number; top: number; width: number; height: number }): { x: number; y: number } {
@@ -11,6 +11,9 @@ export function toLogical(clientX: number, clientY: number, rect: { left: number
 }
 
 type Dir = 'left' | 'right' | 'up' | 'down';
+
+/** 発射キー：Z＝基地 A、X＝基地 B（中央）、C＝基地 C（LLM-GUI-0001 §3） */
+export const FIRE_KEYS: Readonly<Record<string, number>> = { KeyZ: 0, KeyX: 1, KeyC: 2 };
 
 const ARROWS: Record<string, Dir> = {
   ArrowLeft: 'left',
@@ -31,9 +34,17 @@ export interface InputSource {
 export function createInput(stage: HTMLElement): InputSource {
   const held = new Set<Dir>();
   let pointer: { x: number; y: number } | null = null;
+  // 押した瞬間を、次に読むまで覚えておく（押しっぱなしの連続入力では撃たない）
+  let fire: [boolean, boolean, boolean] = [false, false, false];
 
   window.addEventListener('keydown', (e) => {
     if (e.target instanceof HTMLInputElement) return;
+    const base = FIRE_KEYS[e.code];
+    if (base !== undefined) {
+      if (!e.repeat) fire[base] = true;
+      e.preventDefault();
+      return;
+    }
     const dir = ARROWS[e.key];
     if (dir) {
       held.add(dir);
@@ -59,8 +70,10 @@ export function createInput(stage: HTMLElement): InputSource {
         y: held.has('down') === held.has('up') ? 0 : held.has('down') ? 1 : -1,
       };
       const p = pointer;
+      const f: FireButtons = fire;
       pointer = null;
-      return { move, pointer: p };
+      fire = [false, false, false];
+      return { move, pointer: p, fire: f };
     },
   };
 }

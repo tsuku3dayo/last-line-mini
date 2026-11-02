@@ -11,7 +11,7 @@ import {
   type Cursor,
   type MoveDir,
 } from '../../src/core/cursor';
-import { createGame, step } from '../../src/core/game';
+import { createGame, NO_FIRE, step } from '../../src/core/game';
 
 const RIGHT: MoveDir = { x: 1, y: 0 };
 const NONE: MoveDir = { x: 0, y: 0 };
@@ -99,7 +99,7 @@ describe('照準（マウス）', () => {
   });
 
   it('LLM-TC-0001-02 ゲームの 1 ステップで、マウスの位置が照準に入る', () => {
-    const s = step(createGame(1), { move: NONE, pointer: { x: 300, y: 150 } });
+    const s = step(createGame(1), { move: NONE, pointer: { x: 300, y: 150 }, fire: NO_FIRE });
     expect(s.cursor).toMatchObject({ x: 300, y: 150 });
   });
 });
