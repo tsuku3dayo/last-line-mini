@@ -101,6 +101,12 @@ describe('check:docs', () => {
     expect(checkDocs(root)).toEqual([]); // AC は review のままでよい（受け入れはレビューで）
   });
 
+  it('LLM-TC-9001-07 sources の TASK（ファイルを作らない）はエラーにしない', () => {
+    write('docs/00-product/product-backlog.md', backlog('完成'));
+    write(`docs/07-increments/${AC}-attested-computation-ja.md`, doc(AC, 'attested-computation', { status: 'review', verified: 'verified: null', sources: [`${PBI}（v1.0）`, `${P}-TASK-0004〜0007（スプリント 01）`] }));
+    expect(checkDocs(root)).toEqual([]);
+  });
+
   it('LLM-TC-9001-07 完成した PBI の手動の確認 ID が AC にないとエラー', () => {
     edit(`docs/05-test/${TC}-test-case-ja.md`, '| 自動（単体） |', '| 手動 |');
     write('tests/unit/a.test.ts', "it('例', () => {});\n");

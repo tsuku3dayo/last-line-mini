@@ -150,6 +150,8 @@ export function checkDocs(root, opts = {}) {
     if (!doc.fm || !Array.isArray(doc.fm.sources)) continue;
     for (const entry of doc.fm.sources) {
       const s = parseSource(entry);
+      // TASK はファイルを作らない（OPTION 5.1）。スプリントバックログの表にあるので、ここでは確かめない
+      if (s.id?.startsWith(`${PREFIX}-TASK-`)) continue;
       if (s.id) {
         const src = byId.get(s.id);
         if (!src) { err(doc.rel, `sources の ${s.id} がない`); continue; }
