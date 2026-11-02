@@ -40,6 +40,7 @@ const draw = () => {
   render(ctx, state, { score: 0, topScore: 0 });
   // E2E が読む状態（テンプレート §5.4）
   body.dataset.step = String(state.step);
+  body.dataset.ammo = state.bases.map((b) => b.ammo).join(',');
 };
 
 watchLayout(stage, canvas, (layout, dpr) => {

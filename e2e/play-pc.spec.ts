@@ -31,6 +31,44 @@ test('LLM-TC-0001-02 マウスを動かすと、照準がマウスの位置に�
   }
 });
 
+interface PlayState {
+  interceptors: { base: number; toX: number; toY: number }[];
+  blasts: { x: number; y: number; age: number }[];
+  bases: { ammo: number }[];
+}
+const play = (page: Page) => page.evaluate(() => window.__llm?.getState() as unknown as PlayState);
+
+test('LLM-TC-0001-03 X キーで中央の基地から照準へ撃ち、着くと爆風になる', async ({ page }) => {
+  await openFrozen(page);
+  const p = await toPage(page, 240, 200);
+  await page.mouse.move(p.x, p.y);
+  await advance(page, 1);
+  await page.keyboard.press('KeyX');
+  await advance(page, 1);
+  let s = await play(page);
+  expect(s.interceptors).toHaveLength(1);
+  expect(s.interceptors[0]).toMatchObject({ base: 1, toX: 240, toY: 200 });
+  // 中央は 1 秒に 600 ドット。360 ドット先へは 1 秒あれば着く
+  await advance(page, 120);
+  s = await play(page);
+  expect(s.interceptors).toHaveLength(0);
+  expect(s.blasts).toHaveLength(1);
+  expect(s.blasts[0]).toMatchObject({ x: 240, y: 200 });
+});
+
+test('LLM-TC-0001-05 Z キーで撃つたびに左の基地の残弾が減り、0 になると撃てない', async ({ page }) => {
+  await openFrozen(page);
+  await expect(page.locator('body')).toHaveAttribute('data-ammo', '10,10,10');
+  for (let i = 0; i < 11; i++) {
+    await page.keyboard.press('KeyZ');
+    await advance(page, 1);
+  }
+  await expect(page.locator('body')).toHaveAttribute('data-ammo', '0,10,10');
+  await page.keyboard.press('KeyC');
+  await advance(page, 1);
+  await expect(page.locator('body')).toHaveAttribute('data-ammo', '0,10,9');
+});
+
 test('LLM-TC-0001-01 方向キーを押し続けると照準が加速して動き、離すとすぐには止まらず止まる', async ({ page }) => {
   await openFrozen(page);
   const start = await cursor(page);
