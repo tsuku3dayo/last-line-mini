@@ -18,7 +18,7 @@ PC のブラウザでプレビューの URL を開くと、照準を動かして
 
 | ID | やること | PBI | 確認 ID | 依存 | ブランチ | 状態 | PR |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| LLM-TASK-0001 | 土台：Vite・TypeScript・ESLint（層の決まり）・Vitest・Playwright、画面に版を出す、check-dist（原作の名前が入っていないことも）、`ci.yml`（PR で verify・E2E）、テスト戦略 LLM-TST-0001。道具の版をその日の最新で確かめ、TS を直す | PBI-0001 | — | — | chore/TASK-0001-foundation | 未着手 | |
+| LLM-TASK-0001 | 土台：Vite・TypeScript・ESLint（層の決まり）・Vitest・Playwright、画面に版を出す、check-dist（原作の名前が入っていないことも）、`ci.yml`（PR で verify・E2E）、テスト戦略 LLM-TST-0001。道具の版をその日の最新で確かめ、TS を直す | PBI-0001 | TC-9001-01, 02, 03 | — | chore/TASK-0001-foundation | レビュー待ち | #3 |
 | LLM-TASK-0002 | 公開：`pages.yml`（main → `/preview/`、タグ → `/`。タグがないあいだは「準備中」のページ）、本番とプレビューで名前・アイコン・`<app-id>`・SW を分ける（本番の SW は `/preview/` を扱わない）、PWA の骨組み、Pages の設定、main の保護 | PBI-0001 | — | 0001 | chore/TASK-0002-pages | 未着手 | |
 | LLM-TASK-0003 | `check:docs`（TEAM 4.5。置き場所は `docs/`）と、版を上げるスクリプト（TEAM 2.4） | PBI-0001 | — | 0001 | chore/TASK-0003-check-docs | 未着手 | |
 | LLM-TASK-0004 | ゲームの骨組み：固定ステップ・種つき乱数・状態・ループ・大きさ合わせ（480 × 640）・地面と基地と都市と HUD の枠の描画・テスト用の入口（`?debug=1`、`window.__llm`、body の data 属性）。必要なら TD を書く | PBI-0001 | — | 0001 | feat/TASK-0004-game-skeleton | 未着手 | |
@@ -42,3 +42,4 @@ PC のブラウザでプレビューの URL を開くと、照準を動かして
 ## 作業セッションの記録（デイリースクラム）
 
 - 2026-11-02：スプリントプランニング。スプリントゴール（案 A）と TASK-0008 の追加に合意。計画の PR のマージ後に TASK-0001 から始める。
+- 2026-11-02：ゴールまで 0/8 TASK。TASK-0001（土台）。妨げなし。→ PR #3。TypeScript は 7 系が出ているが typescript-eslint が未対応のため 6.0.3。E2E の 1 回目の失敗（4173 番ポートの別のサーバーを使い回した疑い）を受けて、E2E は毎回サーバーを立てる設定にした。
