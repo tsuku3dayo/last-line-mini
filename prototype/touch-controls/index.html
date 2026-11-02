@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#3a1f00" />
+    <!-- 試作（LLM-TASK-0008）。本物のアプリと取り違えないよう、名前・色を変えている（TEAM 5.2） -->
+    <title>【試作】タッチ操作</title>
+    <style>
+      :root {
+        --safe-top: env(safe-area-inset-top, 0px);
+        --safe-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: #000;
+        color: #e0e0e0;
+        font-family: system-ui, sans-serif;
+        overscroll-behavior: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        touch-action: none;
+      }
+      body { position: fixed; inset: 0; overflow: hidden; }
+      #wrap {
+        position: absolute;
+        inset: var(--safe-top) 0 var(--safe-bottom) 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #banner {
+        width: 100%;
+        background: #3a1f00;
+        color: #ffb347;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 8px;
+        box-sizing: border-box;
+        flex: 0 0 auto;
+      }
+      #modes button {
+        min-width: 44px;
+        min-height: 32px;
+        margin-left: 4px;
+        border: 1px solid #ffb347;
+        background: transparent;
+        color: #ffb347;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      #modes button.on { background: #ffb347; color: #000; }
+      #game { flex: 0 0 auto; background: #05070f; image-rendering: pixelated; }
+      #controls { flex: 1 1 auto; width: 100%; display: flex; gap: 8px; padding: 8px; box-sizing: border-box; min-height: 0; }
+      #pad {
+        flex: 1 1 55%;
+        border: 2px dashed #4f6b55;
+        border-radius: 12px;
+        color: #4f6b55;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+      }
+      #buttons { flex: 1 1 45%; display: flex; gap: 6px; align-items: stretch; }
+      #buttons button {
+        flex: 1 1 0;
+        min-width: 44px;
+        min-height: 44px;
+        border-radius: 12px;
+        border: none;
+        background: #8fd3ff;
+        color: #05070f;
+        font-size: 20px;
+        font-weight: bold;
+      }
+      #buttons button:disabled { background: #555; color: #999; }
+      #buttons button.pressed { background: #ffe066; }
+      #hint { font-size: 12px; color: #aaa; text-align: center; padding: 0 8px 4px; flex: 0 0 auto; }
+    </style>
+  </head>
+  <body>
+    <div id="wrap">
+      <div id="banner">
+        <span>【試作】タッチ操作</span>
+        <span id="modes">
+          <button data-mode="A" class="on">A</button><button data-mode="B">B</button><button data-mode="C">C</button>
+        </span>
+      </div>
+      <canvas id="game"></canvas>
+      <div id="hint"></div>
+      <div id="controls">
+        <div id="pad">ここをなぞって照準を動かす</div>
+        <div id="buttons">
+          <button data-base="0">A</button><button data-base="1">B</button><button data-base="2">C</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      'use strict';
+      // 操作の手触りを見るための試作。本物のゲームのロジック（src/core）は使わない、使い捨てのコード
+      var W = 480, H = 640, GROUND = 592, BASES = [40, 240, 440], CITIES = [100, 140, 180, 300, 340, 380];
+      var HINTS = {
+        A: '案 A：下の枠を指でなぞると照準が動く（指で狙う所が隠れない）。右の A・B・C で撃つ',
+        B: '案 B：ゲーム画面を触った所に照準を置く。下の A・B・C で撃つ',
+        C: '案 C：ゲーム画面を触った所へ、いちばん近い弾のある基地からすぐ撃つ',
+      };
+      var canvas = document.getElementById('game');
+      var ctx = canvas.getContext('2d');
+      var pad = document.getElementById('pad');
+      var buttonsEl = document.getElementById('buttons');
+      var hint = document.getElementById('hint');
+      var mode = 'A';
+      var scale = 1;
+      var state;
+
+      function reset() {
+        state = { cursor: { x: 240, y: 300 }, ammo: [10, 10, 10], missiles: [], blasts: [], enemies: [], t: 0, hits: 0, shots: 0 };
+      }
+
+      function layout() {
+        var wrap = document.getElementById('wrap').getBoundingClientRect();
+        var banner = document.getElementById('banner').getBoundingClientRect().height;
+        var reserve = mode === 'C' ? 40 : 170; // 操作空間とヒントの高さ
+        var availH = wrap.height - banner - reserve;
+        scale = Math.max(0.1, Math.min(wrap.width / W, availH / H));
+        var dpr = window.devicePixelRatio || 1;
+        canvas.style.width = W * scale + 'px';
+        canvas.style.height = H * scale + 'px';
+        canvas.width = Math.round(W * scale * dpr);
+        canvas.height = Math.round(H * scale * dpr);
+        ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
+        document.getElementById('controls').style.display = mode === 'C' ? 'none' : 'flex';
+        pad.style.display = mode === 'A' ? 'flex' : 'none';
+        hint.textContent = HINTS[mode];
+      }
+
+      function clampCursor() {
+        var c = state.cursor;
+        c.x = Math.max(4, Math.min(W - 4, c.x));
+        c.y = Math.max(32, Math.min(556, c.y));
+      }
+
+      function toLogical(touch) {
+        var r = canvas.getBoundingClientRect();
+        return { x: ((touch.clientX - r.left) / r.width) * W, y: ((touch.clientY - r.top) / r.height) * H };
+      }
+
+      function fire(base, tx, ty) {
+        if (state.ammo[base] <= 0) return;
+        state.ammo[base] -= 1;
+        state.shots += 1;
+        state.missiles.push({ base: base, fx: BASES[base], fy: 560, tx: tx, ty: ty, d: 0, speed: base === 1 ? 5 : 2.5 });
+      }
+
+      function nearestBase(x) {
+        var best = -1, bestD = Infinity;
+        for (var i = 0; i < 3; i++) {
+          var d = Math.abs(BASES[i] - x);
+          if (state.ammo[i] > 0 && d < bestD) { best = i; bestD = d; }
+        }
+        return best;
+      }
+
+      // 長押しの虫めがね・2 回タップの拡大を止める（TEAM 5.2）
+      document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+      document.addEventListener('touchstart', function (e) {
+        if (e.target.closest && e.target.closest('#modes')) return;
+        e.preventDefault();
+      }, { passive: false });
+
+      // 案 A：トラックパッド（なぞった量だけ照準を動かす。1.6 倍）
+      var last = null;
+      pad.addEventListener('touchstart', function (e) { var t = e.changedTouches[0]; last = { id: t.identifier, x: t.clientX, y: t.clientY }; });
+      pad.addEventListener('touchmove', function (e) {
+        for (var i = 0; i < e.changedTouches.length; i++) {
+          var t = e.changedTouches[i];
+          if (!last || t.identifier !== last.id) continue;
+          state.cursor.x += ((t.clientX - last.x) / scale) * 1.6;
+          state.cursor.y += ((t.clientY - last.y) / scale) * 1.6;
+          last = { id: t.identifier, x: t.clientX, y: t.clientY };
+          clampCursor();
+        }
+      });
+      pad.addEventListener('touchend', function () { last = null; });
+
+      // 案 B・C：ゲーム画面を触る
+      function onGameTouch(e) {
+        if (mode === 'A') return;
+        var t = e.changedTouches[0];
+        var p = toLogical(t);
+        state.cursor.x = p.x;
+        state.cursor.y = p.y;
+        clampCursor();
+        if (mode === 'C' && e.type === 'touchstart') {
+          var b = nearestBase(state.cursor.x);
+          if (b >= 0) fire(b, state.cursor.x, state.cursor.y);
+        }
+      }
+      canvas.addEventListener('touchstart', onGameTouch);
+      canvas.addEventListener('touchmove', function (e) { if (mode === 'B') onGameTouch(e); });
+
+      // 発射ボタン（案 A・B）
+      Array.prototype.forEach.call(buttonsEl.querySelectorAll('button'), function (btn) {
+        btn.addEventListener('touchstart', function () {
+          btn.classList.add('pressed');
+          fire(Number(btn.getAttribute('data-base')), state.cursor.x, state.cursor.y);
+        });
+        btn.addEventListener('touchend', function () { btn.classList.remove('pressed'); });
+      });
+
+      // 案の切り替え
+      Array.prototype.forEach.call(document.querySelectorAll('#modes button'), function (btn) {
+        btn.addEventListener('click', function () {
+          mode = btn.getAttribute('data-mode');
+          Array.prototype.forEach.call(document.querySelectorAll('#modes button'), function (b) { b.classList.toggle('on', b === btn); });
+          reset();
+          layout();
+        });
+      });
+
+      function update() {
+        state.t += 1;
+        // 試しやすいように、弾がすべて尽きて飛んでいる弾もなくなったら補充する（本物にはない）
+        if (state.ammo[0] + state.ammo[1] + state.ammo[2] === 0 && state.missiles.length === 0) state.ammo = [10, 10, 10];
+        if (state.t % 150 === 0) {
+          var targets = CITIES.concat(BASES);
+          var tx = targets[Math.floor(Math.random() * targets.length)];
+          state.enemies.push({ fx: 8 + Math.random() * 464, fy: 0, tx: tx, ty: GROUND, d: 0, speed: 0.55 + Math.random() * 0.25 });
+        }
+        state.missiles = state.missiles.filter(function (m) {
+          m.d += m.speed;
+          var total = Math.hypot(m.tx - m.fx, m.ty - m.fy);
+          if (m.d >= total) { state.blasts.push({ x: m.tx, y: m.ty, age: 0 }); return false; }
+          return true;
+        });
+        state.blasts = state.blasts.filter(function (b) { b.age += 1; return b.age < 66; });
+        state.enemies = state.enemies.filter(function (e) {
+          e.d += e.speed;
+          var total = Math.hypot(e.tx - e.fx, e.ty - e.fy);
+          var k = Math.min(1, e.d / total);
+          var x = e.fx + (e.tx - e.fx) * k, y = e.fy + (e.ty - e.fy) * k;
+          for (var i = 0; i < state.blasts.length; i++) {
+            var b = state.blasts[i];
+            if (Math.hypot(x - b.x, y - b.y) <= radius(b.age)) { state.hits += 1; return false; }
+          }
+          return k < 1;
+        });
+      }
+
+      function radius(age) { return age < 24 ? 24 * (age + 1) / 24 : age < 36 ? 24 : 24 * (1 - (age - 35) / 30); }
+
+      function line(x1, y1, x2, y2, color) { ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+
+      function draw() {
+        ctx.fillStyle = '#05070f';
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = '#2b3b2f';
+        ctx.fillRect(0, GROUND, W, H - GROUND);
+        for (var i = 0; i < 3; i++) {
+          ctx.fillStyle = '#2b3b2f';
+          ctx.fillRect(BASES[i] - 24, 572, 48, 20);
+          ctx.fillStyle = state.ammo[i] > 0 ? '#8fd3ff' : '#555';
+          ctx.fillRect(BASES[i] - 10, 562, 20, 10);
+          ctx.font = '16px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(String(state.ammo[i]), BASES[i], 618);
+        }
+        ctx.fillStyle = '#ffb347';
+        CITIES.forEach(function (x) { ctx.fillRect(x - 10, 580, 20, 12); });
+        state.enemies.forEach(function (e) {
+          var total = Math.hypot(e.tx - e.fx, e.ty - e.fy), k = Math.min(1, e.d / total);
+          line(e.fx, e.fy, e.fx + (e.tx - e.fx) * k, e.fy + (e.ty - e.fy) * k, '#ff5a3c');
+        });
+        state.missiles.forEach(function (m) {
+          var total = Math.hypot(m.tx - m.fx, m.ty - m.fy), k = Math.min(1, m.d / total);
+          line(m.fx, m.fy, m.fx + (m.tx - m.fx) * k, m.fy + (m.ty - m.fy) * k, '#6cff8a');
+        });
+        state.blasts.forEach(function (b) {
+          ctx.strokeStyle = '#ff9f1c';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, Math.max(1, radius(b.age) - 1.5), 0, Math.PI * 2);
+          ctx.stroke();
+        });
+        var c = state.cursor;
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(c.x - 8, c.y - 1, 6, 2); ctx.fillRect(c.x + 2, c.y - 1, 6, 2);
+        ctx.fillRect(c.x - 1, c.y - 8, 2, 6); ctx.fillRect(c.x - 1, c.y + 2, 2, 6);
+        ctx.fillStyle = '#ffb347';
+        ctx.font = '16px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('試作 ' + mode + '  撃墜 ' + state.hits + ' / 発射 ' + state.shots, 8, 20);
+        Array.prototype.forEach.call(buttonsEl.querySelectorAll('button'), function (btn, i) { btn.disabled = state.ammo[i] <= 0; });
+      }
+
+      var acc = 0, prev = null;
+      function frame(now) {
+        if (prev !== null) {
+          acc += Math.min(100, now - prev);
+          while (acc >= 1000 / 60) { update(); acc -= 1000 / 60; }
+        }
+        prev = now;
+        draw();
+        requestAnimationFrame(frame);
+      }
+
+      reset();
+      layout();
+      window.addEventListener('resize', layout);
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>
