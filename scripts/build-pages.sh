@@ -21,6 +21,10 @@ build() { # $1: git の ref  $2: チャンネル  $3: 置き場所
   )
   mkdir -p "$3"
   cp -R "$WT/dist/." "$3"
+  # 画面の試作はプレビューにだけ置く（SW のキャッシュには入れない。vite.config.ts の globIgnores）
+  if [ "$2" = "preview" ] && [ -d "$WT/prototype" ]; then
+    cp -R "$WT/prototype" "$3/prototype"
+  fi
   git worktree remove --force "$WT"
 }
 
