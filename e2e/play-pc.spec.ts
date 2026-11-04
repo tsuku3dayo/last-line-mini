@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, openFrozen } from './helpers';
+import { advance, moveMouse, openFrozen } from './helpers';
 
 // PC の操作（キーボード・マウス）。タッチの端末では LLM-PBI-0002 で確かめる
 test.skip(({ isMobile }) => isMobile, 'PC の操作だけ');
@@ -23,7 +23,7 @@ test('LLM-TC-0001-02 マウスを動かすと、照準がマウスの位置に�
   await openFrozen(page);
   for (const target of [{ x: 100, y: 200 }, { x: 400, y: 450 }]) {
     const p = await toPage(page, target.x, target.y);
-    await page.mouse.move(p.x, p.y);
+    await moveMouse(page, p.x, p.y);
     await advance(page, 1);
     const c = await cursor(page);
     expect(c.x).toBeCloseTo(target.x, 0);
@@ -41,7 +41,7 @@ const play = (page: Page) => page.evaluate(() => window.__llm?.getState() as unk
 test('LLM-TC-0001-03 X キーで中央の基地から照準へ撃ち、着くと爆風になる', async ({ page }) => {
   await openFrozen(page);
   const p = await toPage(page, 240, 200);
-  await page.mouse.move(p.x, p.y);
+  await moveMouse(page, p.x, p.y);
   await advance(page, 1);
   await page.keyboard.press('KeyX');
   await advance(page, 1);

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, openFrozen } from './helpers';
+import { advance, moveMouse, openFrozen } from './helpers';
 
 // 都市と基地の被弾（LLM-PBI-0003）。PC でも iPhone でも確かめる
 
@@ -35,7 +35,7 @@ test('LLM-TC-0003-02 LLM-TC-0003-03 敵が落ちると都市と基地が壊れ�
   if (isMobile) {
     await page.touchscreen.tap(above.x, above.y);
   } else {
-    await page.mouse.move(above.x, above.y);
+    await moveMouse(page, above.x, above.y);
     await page.keyboard.press('KeyX'); // 基地 B のキー
   }
   await advance(page, 1);
