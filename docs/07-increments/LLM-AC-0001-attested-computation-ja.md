@@ -2,20 +2,20 @@
 id: LLM-AC-0001
 type: attested-computation
 title: PC で、照準と 3 つの基地で落ちてくるミサイルを迎え撃てる
-status: review
+status: stable
 version: 1.0
-updated: 2026-11-02
+updated: 2026-11-04
 sources:
   - LLM-PBI-0001（v1.0）
   - LLM-TC-0001（v1.1）
   - LLM-TC-9001（v1.3）
   - LLM-TASK-0001〜0007（スプリント 01。PR #3〜#9）
-verified: null
+verified: { by: オーナー, at: 2026-11-04T09:32:19+09:00 }
 ---
 
 # LLM-AC-0001 インクリメントの実施記録
 
-LLM-PBI-0001 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。受け入れはスプリント 01 のスプリントレビューで PO が決める。
+LLM-PBI-0001 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 01 のスプリントレビュー（2026-11-04）で PO が受け入れた。
 
 - 対象の版：main `4c5f47d`（PR #9 のマージ）、プレビュー `v0.1.0 β`
 - 公開：GitHub Actions「Pages」run 41416864149（success）→ https://tsuku3dayo.github.io/last-line-mini/preview/
