@@ -6,6 +6,7 @@ import { chooseBase, clampTap, type Point } from './touch';
 import { enemyHead, spawnEnemy, stepEnemies, stepImpacts, type EnemyMissile, type Impact } from './enemy';
 import { launch, stepInterceptors, type Interceptor } from './interceptor';
 import { seedState } from './random';
+import { beginStep, endStep, INITIAL_WAVE, maySpawn, type WaveProgress } from './wave';
 
 export type { Point } from './touch';
 
@@ -35,6 +36,8 @@ export interface GameState {
   readonly enemies: readonly EnemyMissile[];
   /** 敵が地面に着いた跡の閃光 */
   readonly impacts: readonly Impact[];
+  /** ウェーブの進み具合（LLM-PBI-0004） */
+  readonly wave: WaveProgress;
 }
 
 /** 3 つの基地の発射ボタン（A・B・C）。押した瞬間だけ true */
@@ -68,6 +71,7 @@ export function createGame(seed: number): GameState {
     blasts: [],
     enemies: [],
     impacts: [],
+    wave: INITIAL_WAVE,
   };
 }
 
@@ -105,18 +109,23 @@ function cursorAfterTaps(cursor: Cursor, taps: readonly Point[]): Cursor {
   return { x: p.x, y: p.y, vx: 0, vy: 0 };
 }
 
-/** 1 ステップ進める。順番：照準 → 発射（キー → 触った点）→ 迎撃ミサイル → 爆風 → 敵が出る → 敵が動く（爆風で消える・地面に着く）→ 誘爆の爆風を足す → 落ちた所の都市・基地が壊れる */
+/**
+ * 1 ステップ進める。順番：ウェーブの始め（弾を戻す）→ 照準 → 発射（キー → 触った点）→ 迎撃ミサイル → 爆風 →
+ * 敵が出る（ウェーブの数まで）→ 敵が動く（爆風で消える・地面に着く）→ 誘爆の爆風を足す → 落ちた所の都市・基地が壊れる → ウェーブの終わり
+ */
 export function step(state: GameState, input: StepInput): GameState {
   const taps = input.taps ?? [];
+  const begun = beginStep(state.wave, state.bases);
   const aimed = stepCursor(state.cursor, input.move, input.pointer);
-  const fired = fire(state.bases, input.fire, aimed);
+  const fired = fire(begun.bases, input.fire, aimed);
   const tapped = fireAtTaps(fired.bases, taps);
   const cursor = cursorAfterTaps(aimed, taps);
   const moved = stepInterceptors([...state.interceptors, ...fired.launched, ...tapped.launched]);
   // 着いた迎撃ミサイルは、その場で爆風になる（age 0 から）
   const newBlasts = moved.arrived.map((m) => ({ x: m.toX, y: m.toY, age: 0 }));
   const blasts = [...stepBlasts(state.blasts), ...newBlasts];
-  const spawned = spawnEnemy(state.step, state.rng);
+  // 敵はウェーブの中でだけ、そのウェーブの数まで出る。出る間隔はウェーブが始まってからのステップで数える
+  const spawned = maySpawn(begun.wave) ? spawnEnemy(begun.wave.phaseStep, state.rng) : { enemy: null, rng: state.rng };
   const enemies = stepEnemies(spawned.enemy ? [...state.enemies, spawned.enemy] : state.enemies, blasts);
   const landedAt = enemies.landed.map((m) => ({ x: m.toX, y: m.toY, age: 0 }));
   // 誘爆（LLM-PBI-0003）：爆風で壊れた敵の弾頭の場所に、迎撃と同じ爆風を出す。
@@ -135,5 +144,6 @@ export function step(state: GameState, input: StepInput): GameState {
     blasts: [...blasts, ...chained],
     enemies: enemies.flying,
     impacts: [...stepImpacts(state.impacts), ...landedAt],
+    wave: endStep(begun.wave, spawned.enemy !== null, enemies.flying.length),
   };
 }

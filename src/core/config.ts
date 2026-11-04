@@ -12,6 +12,11 @@ export const MAX_STEPS_PER_FRAME = 12;
 /** 基地 A・B・C の x と、最初の弾の数 */
 export const BASE_XS = [40, 240, 440] as const;
 export const AMMO_PER_BASE = 10;
+/** ウェーブごとの敵の数（LLM-PBI-0004。4 ウェーブ・約 3 分。仮の数で LLM-PBI-0011 で直す） */
+export const WAVE_ENEMY_COUNTS = [6, 9, 12, 15] as const;
+/** ウェーブのあいだ（「WAVE n」を出す時間）。始めの WAVE 1 の前にもある */
+export const WAVE_BREAK_STEPS = 3 * STEPS_PER_SECOND;
+
 /** 都市 1〜6 の x */
 export const CITY_XS = [100, 140, 180, 300, 340, 380] as const;
 
