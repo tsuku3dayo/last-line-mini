@@ -11,7 +11,8 @@ test('LLM-TC-9001-01 プレビューを開くと、画面に版が出てタイ�
 });
 
 test('LLM-TC-9001-13 プレビューの版に、build したコミットの短い番号が付く', async ({ page }) => {
-  const head = execSync('git rev-parse --short=7 HEAD', { encoding: 'utf8' }).trim();
+  // build と同じ決め方（vite.config.ts）：APP_COMMIT があればそれ、なければ git
+  const head = process.env.APP_COMMIT || execSync('git rev-parse --short=7 HEAD', { encoding: 'utf8' }).trim();
   await page.goto('./');
   await expect(page.locator('#app-version')).toHaveText(new RegExp(`^v\\d+\\.\\d+\\.\\d+ β ${head}$`));
 });

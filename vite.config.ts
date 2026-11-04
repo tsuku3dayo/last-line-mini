@@ -11,7 +11,8 @@ const ICON_DIR = `icons/${channel}`;
 const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
 // プレビューの版に付けるコミットの短い番号（LLM-TC-9001-13）。build-pages.sh では origin/main の worktree で build するので、マージのコミットになる
 const commit = (() => {
-  if (process.env.APP_COMMIT !== undefined) return process.env.APP_COMMIT;
+  // CI のコンテナの中（git の履歴がない）では、ワークフローが APP_COMMIT を渡す
+  if (process.env.APP_COMMIT) return process.env.APP_COMMIT;
   try {
     return execSync('git rev-parse --short=7 HEAD', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
   } catch {
