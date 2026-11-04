@@ -3,13 +3,13 @@ id: LLM-PBI-0002
 type: product-backlog-item
 title: iPhone のタッチで迎え撃てる
 theme: 迎撃の基本
-status: review
-version: 0.2
+status: stable
+version: 1.0
 updated: 2026-11-04
 sources:
   - LLM-PG-0001（v1.0）
   - docs/spec/last-line-mini-spec.md (v1.1) §3.2・§6.1
-verified: null
+verified: { by: オーナー, at: 2026-11-04T09:23:08+09:00 }
 ---
 
 # LLM-PBI-0002 iPhone のタッチで迎え撃てる

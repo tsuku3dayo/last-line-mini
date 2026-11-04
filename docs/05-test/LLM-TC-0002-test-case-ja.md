@@ -2,12 +2,12 @@
 id: LLM-TC-0002
 type: test-case
 title: iPhone のタッチで迎え撃てる
-status: draft
-version: 0.1
+status: stable
+version: 1.0
 updated: 2026-11-04
 sources:
-  - LLM-PBI-0002（v0.2）
-  - LLM-GUI-0002（v0.1）
+  - LLM-PBI-0002（v1.0）
+  - LLM-GUI-0002（v1.0）
 verified: null
 ---
 
