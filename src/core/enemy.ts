@@ -24,7 +24,7 @@ export interface Impact {
 /** 速さ：1 秒に 32〜48 ドット（画面の上から地面まで約 12.3〜18.5 秒） */
 export const ENEMY_MIN_SPEED = 32 / STEPS_PER_SECOND;
 export const ENEMY_MAX_SPEED = 48 / STEPS_PER_SECOND;
-/** 出る間隔（ウェーブは LLM-PBI-0004。今は一定の間隔で落ち続ける） */
+/** 出る間隔。ウェーブが始まってからのステップで数える（ウェーブごとの数は config の WAVE_ENEMY_COUNTS） */
 export const ENEMY_SPAWN_INTERVAL = 2 * STEPS_PER_SECOND;
 export const ENEMY_FIRST_SPAWN_STEP = Math.round(0.5 * STEPS_PER_SECOND);
 /** 閃光の長さ（LLM-GUI-0001 §4：0.2 秒） */

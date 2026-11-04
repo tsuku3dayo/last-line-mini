@@ -44,6 +44,8 @@ const draw = () => {
   // E2E が読む状態（テンプレート §5.4）
   body.dataset.step = String(state.step);
   body.dataset.ammo = state.bases.map((b) => b.ammo).join(',');
+  body.dataset.wave = String(state.wave.number);
+  body.dataset.status = state.wave.status;
 };
 
 watchLayout(stage, canvas, (layout, dpr) => {
