@@ -4,6 +4,7 @@ import { createInput } from './app/input';
 import { watchLayout } from './app/layout';
 import { startLoop } from './app/loop';
 import { setupPwa } from './app/pwa';
+import { guardTouch } from './app/touch-guard';
 import { formatVersion } from './app/version';
 import { createGame, step, type GameState, type StepInput } from './core/game';
 import { render } from './render/canvas';
@@ -27,6 +28,7 @@ const { debug, seed: fixedSeed } = readDebugParams(location.search);
 let state: GameState = createGame(chooseSeed(fixedSeed));
 let transform = { scale: 1, dpr: 1 };
 const input = createInput(stage);
+guardTouch();
 
 // 入力を渡さなければ、キーボード・マウスから読む
 const advanceBy = (steps: number, given?: StepInput) => {

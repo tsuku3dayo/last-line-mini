@@ -17,6 +17,8 @@ body {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+  /* 2 回タップの拡大・引っぱりのスクロールをさせない（JS の touchstart と両方で止める。src/app/touch-guard.ts） */
+  touch-action: none;
 }
 
 body {
