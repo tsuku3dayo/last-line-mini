@@ -42,6 +42,23 @@ function drawBase(ctx: CanvasRenderingContext2D, x: number, topY: number): void 
   ctx.fillRect(x - 2, topY - 12, 4, 4);
 }
 
+/** 壊れた基地：灰色の台で、上の段が欠けた形（LLM-GUI-0001 §4） */
+function drawBrokenBase(ctx: CanvasRenderingContext2D, x: number, topY: number): void {
+  ctx.fillStyle = COLORS.baseBroken;
+  ctx.fillRect(x - 10, topY - 4, 20, 4);
+  ctx.fillRect(x - 6, topY - 6, 5, 2);
+  ctx.fillRect(x + 2, topY - 7, 4, 3);
+}
+
+/** 壊れた都市：暗い茶色の低いがれき（幅 20・高さ 4 ほど。LLM-GUI-0001 §4） */
+function drawRubble(ctx: CanvasRenderingContext2D, x: number): void {
+  ctx.fillStyle = COLORS.cityRubble;
+  ctx.fillRect(x - 10, GROUND_Y - 2, 20, 2);
+  ctx.fillRect(x - 8, GROUND_Y - 4, 5, 2);
+  ctx.fillRect(x - 1, GROUND_Y - 3, 4, 1);
+  ctx.fillRect(x + 5, GROUND_Y - 4, 3, 2);
+}
+
 /** 都市：暗い建物と暖色の窓の灯り */
 function drawCity(ctx: CanvasRenderingContext2D, x: number): void {
   const base = GROUND_Y;
@@ -129,8 +146,11 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, view: { 
   ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
   drawGround(ctx);
-  for (const base of state.bases) drawBase(ctx, base.x, MOUND_TOP_Y);
-  for (const city of state.cities) if (city.alive) drawCity(ctx, city.x);
+  for (const base of state.bases) (base.alive ? drawBase : drawBrokenBase)(ctx, base.x, MOUND_TOP_Y);
+  for (const city of state.cities) {
+    if (city.alive) drawCity(ctx, city.x);
+    else drawRubble(ctx, city.x);
+  }
 
   // 残弾（基地の真下）
   for (const base of state.bases) {

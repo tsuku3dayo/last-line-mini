@@ -1,5 +1,6 @@
 import { stepBlasts, type Blast } from './blast';
 import { AMMO_PER_BASE, BASE_XS, CITY_XS } from './config';
+import { applyLandings } from './damage';
 import { INITIAL_CURSOR, stepCursor, type Cursor, type MoveDir } from './cursor';
 import { chooseBase, clampTap, type Point } from './touch';
 import { enemyHead, spawnEnemy, stepEnemies, stepImpacts, type EnemyMissile, type Impact } from './enemy';
@@ -11,6 +12,8 @@ export type { Point } from './touch';
 export interface Base {
   readonly x: number;
   readonly ammo: number;
+  /** 壊れていないか。敵が落ちると false になり、残弾 0 のまま撃てない（LLM-PBI-0003） */
+  readonly alive: boolean;
 }
 
 export interface City {
@@ -59,7 +62,7 @@ export function createGame(seed: number): GameState {
     step: 0,
     rng: seedState(seed),
     cursor: INITIAL_CURSOR,
-    bases: BASE_XS.map((x) => ({ x, ammo: AMMO_PER_BASE })),
+    bases: BASE_XS.map((x) => ({ x, ammo: AMMO_PER_BASE, alive: true })),
     cities: CITY_XS.map((x) => ({ x, alive: true })),
     interceptors: [],
     blasts: [],
@@ -102,7 +105,7 @@ function cursorAfterTaps(cursor: Cursor, taps: readonly Point[]): Cursor {
   return { x: p.x, y: p.y, vx: 0, vy: 0 };
 }
 
-/** 1 ステップ進める。順番：照準 → 発射（キー → 触った点）→ 迎撃ミサイル → 爆風 → 敵が出る → 敵が動く（爆風で消える・地面に着く）→ 誘爆の爆風を足す */
+/** 1 ステップ進める。順番：照準 → 発射（キー → 触った点）→ 迎撃ミサイル → 爆風 → 敵が出る → 敵が動く（爆風で消える・地面に着く）→ 誘爆の爆風を足す → 落ちた所の都市・基地が壊れる */
 export function step(state: GameState, input: StepInput): GameState {
   const taps = input.taps ?? [];
   const aimed = stepCursor(state.cursor, input.move, input.pointer);
@@ -119,11 +122,14 @@ export function step(state: GameState, input: StepInput): GameState {
   // 誘爆（LLM-PBI-0003）：爆風で壊れた敵の弾頭の場所に、迎撃と同じ爆風を出す。
   // このステップの判定が終わってから足すので、次のステップから効く（1 ステップの中で連鎖が止まらなくなるのを防ぐ）
   const chained = enemies.destroyed.map((m) => ({ ...enemyHead(m), age: 0 }));
+  // 被弾（LLM-PBI-0003）：落ちた所の都市・基地が壊れる
+  const damaged = applyLandings(state.cities, tapped.bases, enemies.landed.map((m) => enemyHead(m).x));
   return {
     ...state,
     step: state.step + 1,
     cursor,
-    bases: tapped.bases,
+    bases: damaged.bases,
+    cities: damaged.cities,
     rng: spawned.rng,
     interceptors: moved.flying,
     blasts: [...blasts, ...chained],
