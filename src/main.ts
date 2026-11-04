@@ -7,7 +7,7 @@ import { startLoop } from './app/loop';
 import { setupPwa } from './app/pwa';
 import { guardTouch } from './app/touch-guard';
 import { formatVersion } from './app/version';
-import { createGame, step, type GameState, type StepInput } from './core/game';
+import { createGame, forceGameOver, step, type GameState, type StepInput } from './core/game';
 import { render } from './render/canvas';
 
 // 組み立て（ここだけが全部の層を知る）。タイトル画面は LLM-PBI-0006 で足すので、今は開くとすぐプレイが始まる
@@ -74,6 +74,12 @@ if (debug) {
   });
   body.dataset.debug = '1';
   showFps(stage);
+  // 実機確認用：G キーでその場で GAME OVER にする（`?debug=1` のときだけ。PO の決定、スプリント 04）
+  window.addEventListener('keydown', (e) => {
+    if (e.code !== 'KeyG' || e.target instanceof HTMLInputElement) return;
+    state = forceGameOver(state);
+    draw();
+  });
 }
 
 setupPwa();

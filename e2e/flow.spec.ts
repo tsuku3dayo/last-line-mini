@@ -5,6 +5,38 @@ import { advance, openFrozen } from './helpers';
 
 const BREAK_STEPS = 3 * 120;
 
+test('LLM-TC-0004-04 6 都市がすべて壊れると GAME OVER になり、その場で止まる', async ({ page }) => {
+  await openFrozen(page);
+  await advance(page, BREAK_STEPS + 1);
+  // 都市を 5 つ壊し、最後の都市（x=380）に落ちる敵と、ゆっくり飛ぶ敵を置く
+  await page.evaluate(() => {
+    const api = window.__llm;
+    if (!api) throw new Error('テスト用の入口がない');
+    const s = api.getState();
+    api.setState({
+      ...s,
+      cities: s.cities.map((c) => ({ ...c, alive: c.x === 380 })),
+      enemies: [
+        { fromX: 380, fromY: 0, toX: 380, toY: 592, speed: 1, traveled: 591.5 },
+        { fromX: 100, fromY: 0, toX: 100, toY: 592, speed: 0.5, traveled: 200 },
+      ],
+    });
+  });
+  await advance(page, 1);
+  await expect(page.locator('body')).toHaveAttribute('data-status', 'gameover');
+  const before = await page.evaluate(() => window.__llm?.getState().enemies);
+  await advance(page, 30);
+  expect(await page.evaluate(() => window.__llm?.getState().enemies)).toEqual(before);
+});
+
+test('LLM-TC-0004-04 ?debug=1 のとき、PC の G キーでその場で GAME OVER になる', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'キーボードは PC だけ');
+  await openFrozen(page);
+  await advance(page, BREAK_STEPS + 1);
+  await page.keyboard.press('KeyG');
+  await expect(page.locator('body')).toHaveAttribute('data-status', 'gameover');
+});
+
 test('LLM-TC-0004-02 WAVE 1 のあいだ → WAVE 1 → 敵がいなくなると WAVE 2 のあいだ → 弾が 10 発に戻って WAVE 2', async ({ page }) => {
   await openFrozen(page);
   const body = page.locator('body');

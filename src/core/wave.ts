@@ -4,9 +4,13 @@ import { AMMO_PER_BASE, WAVE_BREAK_STEPS, WAVE_ENEMY_COUNTS } from './config';
  * ゲームの場面（LLM-PBI-0004）。
  * - break：ウェーブのあいだ（「WAVE n」を出す約 3 秒。敵は出ない。迎撃は撃てる）。始めの WAVE 1 の前にもある
  * - playing：ウェーブの敵が落ちてくる
- * - clear：最後のウェーブの敵がすべて消えた（GAME OVER は LLM-TASK-0018 で足す）
+ * - clear：最後のウェーブの敵がすべて消え、都市が残っている
+ * - gameover：6 都市がすべて壊れた、または弾が尽きて止められなくなった（その場で止まる）
  */
-export type GameStatus = 'break' | 'playing' | 'clear';
+export type GameStatus = 'break' | 'playing' | 'clear' | 'gameover';
+
+/** 終わったか（CLEAR か GAME OVER） */
+export const isOver = (s: GameStatus): boolean => s === 'clear' || s === 'gameover';
 
 export interface WaveProgress {
   /** 今の（break のときは次の）ウェーブの番号。1 から */
