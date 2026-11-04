@@ -69,6 +69,15 @@ test('LLM-TC-0001-05 Z キーで撃つたびに左の基地の残弾が減り、
   await expect(page.locator('body')).toHaveAttribute('data-ammo', '0,10,9');
 });
 
+test('LLM-TC-0002-06 PC ではマウスのクリックでは撃たない（タッチの操作を足しても変わらない）', async ({ page }) => {
+  await openFrozen(page);
+  const p = await toPage(page, 240, 200);
+  await page.mouse.click(p.x, p.y);
+  await advance(page, 1);
+  await expect(page.locator('body')).toHaveAttribute('data-ammo', '10,10,10');
+  expect((await play(page)).interceptors).toHaveLength(0);
+});
+
 test('LLM-TC-0001-01 方向キーを押し続けると照準が加速して動き、離すとすぐには止まらず止まる', async ({ page }) => {
   await openFrozen(page);
   const start = await cursor(page);
