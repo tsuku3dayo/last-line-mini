@@ -6,7 +6,7 @@ status: stable
 version: 1.0
 updated: 2026-11-02
 sources:
-  - LLM-IDK-0001（v1.0）問い 6
+  - LLM-IDK-0001（v1.1）問い 6
   - docs/spec/ARCHITECTURE-TEMPLATE.md（2026-11-02 版）
   - docs/spec/last-line-mini-spec.md (v1.1) §3・§5・§6
 verified: null

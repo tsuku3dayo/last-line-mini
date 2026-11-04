@@ -2,7 +2,7 @@
 id: LLM-AC-0002
 type: attested-computation
 title: iPhone のタッチで迎え撃てる
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-04
 sources:
@@ -10,12 +10,12 @@ sources:
   - LLM-TC-0002（v1.0）
   - LLM-TC-9001（v1.5）
   - LLM-TASK-0009〜0011（スプリント 02。PR #16〜#18）
-verified: null
+verified: { by: オーナー, at: 2026-11-04T14:26:58+09:00 }
 ---
 
 # LLM-AC-0002 インクリメントの実施記録
 
-LLM-PBI-0002 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。受け入れはスプリント 02 のスプリントレビューで PO が決める。
+LLM-PBI-0002 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 02 のスプリントレビュー（2026-11-04）で PO が受け入れた。
 
 - 対象の版：main `1cf9812`（PR #18 のマージ）、プレビュー `v0.1.0 β 1cf9812`
 - 公開：GitHub Actions「Pages」run 41772736568（success）→ https://tsuku3dayo.github.io/last-line-mini/preview/
