@@ -12,7 +12,12 @@
 - この文書はスプリントレトロスペクティブで変えてよい（冒頭の「版」を上げる）。
 - この文書の「OPTION 6.5」は OPTION の 6.5 節を指す。
 
-版：v1
+版：v1.1
+
+| 版 | 日付 | 変えたこと（もとになったふりかえり） |
+| :--- | :--- | :--- |
+| v1.1 | 2026-11-04（PO 承認） | 置き場所を `docs/` に（スプリント 00）。main への直接コミットをフックで止める（1 章。スプリント 02 の案 1）。コマンドの確認にリスクの評価を出す・質問の聞き方（1.1。スプリント 01 の案 4、スプリント 02 の案 4） |
+| v1 | 2026-11-02 | 初版 |
 
 ---
 
@@ -23,6 +28,7 @@
 | 承認はチャットで | 「承認します」「OK」で受ける。はっきりしない返事は確かめる |
 | PR ごとに区切る | 作業はブランチ → PR → CI が緑 → オーナーがマージ |
 | ブランチ名 | 文書は `docs/<内容>`、機能は `feat/<TASK>-<内容>`、直しは `fix/…`、道具は `chore/…`。作業の前に main を最新にしてから切る |
+| main に直接コミットしない | 手元の main へのコミットは、Git のフック（`.githooks/pre-commit`、`npm install` で有効）が止める。止まったら作業ブランチを切ってからコミットする（v1.1） |
 | 承認のある文書の push | 承認を受けて `stable`・`verified` を書いてから push する（`review` のまま push すると CI が落ちる。4.5） |
 | マージ = プレビューに公開 | main へのマージで、本番とは名前・アイコンを変えたプレビューに公開される。本番の公開はリリースの作業（3.2）でだけ行う |
 | マージ後の片付け | **`gh pr view <番号> --json state` が `MERGED` であることを確かめてから**、main を pull し、作業ブランチを手元と GitHub から消し、プレビューの公開の実行と URL を確かめる（オーナーの次の指示を、マージの合図と思い込まない。未マージの枝を消すと PR が閉じる） |
@@ -45,6 +51,8 @@
 - 何をしたかだけでなく、なぜそうしたか・オーナーにとって何が変わるか・次に何をしてほしいかを書く。
 - コマンドやファイル名をただ並べない。必要なものだけ示し、意味を添える。
 - 決めてほしいことは、選択肢と推奨で示し、選んだあとに何が起きるかを添える。
+- **重さの違う決定を 1 回の質問に混ぜない**。承認（`stable` にするもの）は単独で聞く。答えが抜けたら、推測で埋めずにすぐ聞き直す（v1.1）。
+- **コマンドの実行の確認を求めるときは、リスクの評価を添える**（v1.1）。なし（読み取りだけ）／低（手元のファイルだけを変える）／中（GitHub に送る・PR を作る）／高（消す・上書きする。元に戻しにくい）と、一言の理由。
 
 **文字化けを防ぐ**（Windows の PowerShell 5.1）：日本語のコミットメッセージ・PR の本文は、BOM なしの UTF-8 のファイルに書いて渡す（`git commit -F <ファイル>`、`gh pr create --body-file <ファイル>`）。GitHub でマージしたときに自動で付く題名（「Merge pull request #n …」）は英語になる。日本語にしたいときは、マージの画面で書き換えるか、リポジトリの設定で PR の題名を使うようにする。
 
@@ -58,12 +66,12 @@ ID は `<PREFIX>-<種類>-<4 桁>`、ファイル名は `<ID>-<種類名>-ja.md`
 
 | 種類 | 略 | 置き場所 | いつ作る | PO の承認 |
 | :--- | :--- | :--- | :--- | :--- |
-| system-architecture / technology-stack / architecture-decision | SA / TS / ADR | doc/02-architecture | 決める必要が出たとき | PO の前提を変えるものだけ（OPTION 2.1） |
-| gui-design | GUI | doc/03-gui | 画面に関わる PBI のリファインメント | あり |
-| technical-design | TD | doc/04-design | スプリントプランニングのトピック 3・実装中に、必要な分だけ | なし |
-| test-strategy / test-case | TST / TC | doc/05-test | TST は最初のスプリント。TC は PBI を「準備 OK」にするとき | なし |
+| system-architecture / technology-stack / architecture-decision | SA / TS / ADR | docs/02-architecture | 決める必要が出たとき | PO の前提を変えるものだけ（OPTION 2.1） |
+| gui-design | GUI | docs/03-gui | 画面に関わる PBI のリファインメント | あり |
+| technical-design | TD | docs/04-design | スプリントプランニングのトピック 3・実装中に、必要な分だけ | なし |
+| test-strategy / test-case | TST / TC | docs/05-test | TST は最初のスプリント。TC は PBI を「準備 OK」にするとき | なし |
 
-ID のないそのほかの文書：仕様書 `doc/specification.md`、再現開発仕様書 `doc/reproduction-specification.md`。
+ID のないそのほかの文書：仕様書 `docs/specification.md`、再現開発仕様書 `docs/reproduction-specification.md`。
 
 TASK の ID は `<PREFIX>-TASK-<4 桁>`（スプリントをまたいで通し番号）。
 
@@ -81,7 +89,7 @@ version: 1.0
 updated: 2026-11-02
 sources:                # 根拠にした成果物と、その版
   - <PREFIX>-PG-0001（v1.0）
-  - doc/specification.md (v1.0) §7
+  - docs/specification.md (v1.0) §7
 verified: null          # 承認したら { by, at（+09:00） }
 ---
 ```
@@ -133,7 +141,7 @@ OPTION 6.7 で、PO が本番の公開を決めたあとの作業。
 
 OPTION 6.8 で、プロダクトゴールを達成（または放棄）したときの作業。
 
-- [ ] `doc/reproduction-specification.md` の第 1 部を最新の仕様書に、第 2 部を main の実装（設定・保存のキー・値）に合わせる
+- [ ] `docs/reproduction-specification.md` の第 1 部を最新の仕様書に、第 2 部を main の実装（設定・保存のキー・値）に合わせる
 - [ ] 第 1 部が最新の仕様書と同じ、第 2 部の値が main の実装と同じであることを確かめる（4.4）
 - [ ] README の内容（機能・コマンド・ファイル構成）が最新か確かめる
 
