@@ -1,0 +1,3 @@
+#!/bin/sh
+# コミットの前に動く点検（scripts/setup-hooks.mjs が npm install のときに有効にする）
+node scripts/guard-main.mjs
