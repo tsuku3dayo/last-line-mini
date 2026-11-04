@@ -9,10 +9,15 @@ const run = (s: GameState, n: number): GameState => {
   return cur;
 };
 
-/** 状態が変わるまで進める（上限つき） */
-function runUntil(s: GameState, done: (s: GameState) => boolean, limit = 120 * 600): GameState {
+/**
+ * 状態が変わるまで進める（上限つき）。
+ * keepAlive のときは、ウェーブの進み方だけを確かめるため、毎ステップ都市と基地を始めの状態に戻し、
+ * 6 都市全滅・弾切れの GAME OVER にならないようにする（狙う物以外は消して前提を確かめる。TEAM 5.6）
+ */
+function runUntil(s: GameState, done: (s: GameState) => boolean, keepAlive = false, limit = 120 * 600): GameState {
   let cur = s;
-  for (let i = 0; i < limit && !done(cur); i++) cur = step(cur, NO_INPUT);
+  const keep = (x: GameState): GameState => (keepAlive ? { ...x, cities: s.cities, bases: s.bases } : x);
+  for (let i = 0; i < limit && !done(cur); i++) cur = keep(step(cur, NO_INPUT));
   if (!done(cur)) throw new Error('上限までに変わらなかった');
   return cur;
 }
@@ -34,13 +39,17 @@ describe('ウェーブ（LLM-PBI-0004）', () => {
     let s = createGame(3);
     const counts: number[] = [];
     for (let n = 1; n <= WAVE_COUNT; n++) {
-      s = runUntil(s, (x) => x.wave.number === n && x.wave.status === 'playing');
+      s = runUntil(s, (x) => x.wave.number === n && x.wave.status === 'playing', true);
       let max = 0;
       // そのウェーブが終わるまでに出た数を数える
-      s = runUntil(s, (x) => {
-        max = Math.max(max, x.wave.spawned);
-        return x.wave.status !== 'playing';
-      });
+      s = runUntil(
+        s,
+        (x) => {
+          max = Math.max(max, x.wave.spawned);
+          return x.wave.status !== 'playing';
+        },
+        true,
+      );
       counts.push(max);
     }
     expect(counts).toEqual([6, 9, 12, 15]);

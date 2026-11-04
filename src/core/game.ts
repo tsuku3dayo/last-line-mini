@@ -1,6 +1,7 @@
 import { stepBlasts, type Blast } from './blast';
 import { AMMO_PER_BASE, BASE_XS, CITY_XS } from './config';
 import { applyLandings } from './damage';
+import { allCitiesLost, cannotStop } from './end';
 import { INITIAL_CURSOR, stepCursor, type Cursor, type MoveDir } from './cursor';
 import { chooseBase, clampTap, type Point } from './touch';
 import { enemyHead, spawnEnemy, stepEnemies, stepImpacts, type EnemyMissile, type Impact } from './enemy';
@@ -114,6 +115,10 @@ function cursorAfterTaps(cursor: Cursor, taps: readonly Point[]): Cursor {
  * 敵が出る（ウェーブの数まで）→ 敵が動く（爆風で消える・地面に着く）→ 誘爆の爆風を足す → 落ちた所の都市・基地が壊れる → ウェーブの終わり
  */
 export function step(state: GameState, input: StepInput): GameState {
+  // GAME OVER のあとは、その場で止まる（敵も爆風も動かない）。経った時間だけ数える（終わりの表示に使う）
+  if (state.wave.status === 'gameover') {
+    return { ...state, step: state.step + 1, wave: { ...state.wave, phaseStep: state.wave.phaseStep + 1 } };
+  }
   const taps = input.taps ?? [];
   const begun = beginStep(state.wave, state.bases);
   const aimed = stepCursor(state.cursor, input.move, input.pointer);
@@ -133,7 +138,7 @@ export function step(state: GameState, input: StepInput): GameState {
   const chained = enemies.destroyed.map((m) => ({ ...enemyHead(m), age: 0 }));
   // 被弾（LLM-PBI-0003）：落ちた所の都市・基地が壊れる
   const damaged = applyLandings(state.cities, tapped.bases, enemies.landed.map((m) => enemyHead(m).x));
-  return {
+  const next: GameState = {
     ...state,
     step: state.step + 1,
     cursor,
@@ -146,4 +151,20 @@ export function step(state: GameState, input: StepInput): GameState {
     impacts: [...stepImpacts(state.impacts), ...landedAt],
     wave: endStep(begun.wave, spawned.enemy !== null, enemies.flying.length),
   };
+  return judgeEnd(next);
+}
+
+/**
+ * 終わりの判定（LLM-PBI-0004）。GAME OVER は CLEAR より先に見る（都市が 1 つもないのに CLEAR にしない）。
+ * 弾切れの判定は、ウェーブの中だけ（あいだは次のウェーブで弾が戻るので判定しない）
+ */
+function judgeEnd(s: GameState): GameState {
+  if (s.wave.status === 'gameover') return s;
+  const lost = allCitiesLost(s.cities) || (s.wave.status === 'playing' && cannotStop(s));
+  return lost ? forceGameOver(s) : s;
+}
+
+/** その場で GAME OVER にする（判定のほか、`?debug=1` の G キーでも使う） */
+export function forceGameOver(s: GameState): GameState {
+  return { ...s, wave: { ...s.wave, status: 'gameover', phaseStep: 0 } };
 }
