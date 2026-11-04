@@ -1,6 +1,9 @@
 # 原作のスクリーンショット（権利のため公開リポジトリに入れない。LLM-IDK-0001 心配ごと②）
 docs/spec/*.png
 
+# 実機確認のスクリーンショットなど、Claude Code に見せるための一時の置き場所（公開リポジトリに入れない）
+.temp/
+
 node_modules/
 dist/
 site/
