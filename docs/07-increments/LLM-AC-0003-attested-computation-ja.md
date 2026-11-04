@@ -2,7 +2,7 @@
 id: LLM-AC-0003
 type: attested-computation
 title: 誘爆が起き、都市と基地がやられる
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-04
 sources:
@@ -10,12 +10,12 @@ sources:
   - LLM-TC-0003（v1.0）
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0013〜0014（スプリント 03。PR #23・#24）
-verified: null
+verified: { by: オーナー, at: 2026-11-04T16:41:43+09:00 }
 ---
 
 # LLM-AC-0003 インクリメントの実施記録
 
-LLM-PBI-0003 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。受け入れはスプリント 03 のスプリントレビューで PO が決める。
+LLM-PBI-0003 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 03 のスプリントレビュー（2026-11-04）で PO が受け入れた。
 
 - 対象の版：実機確認はプレビュー `v0.1.0 β aefe8c4`（PR #24 のマージ）。自動テストは main `89faf69`（PR #25 のマージ。#25 はプロセスの文書だけでコードは同じ）
 - 公開：GitHub Actions「Pages」run 41788911579（success）→ https://tsuku3dayo.github.io/last-line-mini/preview/
