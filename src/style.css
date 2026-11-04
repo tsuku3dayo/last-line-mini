@@ -48,6 +48,16 @@ body {
   image-rendering: pixelated;
 }
 
+/* `?debug=1` の fps：ゲーム画面の左下の隅（実機確認用。src/app/fps.ts） */
+#debug-fps {
+  position: absolute;
+  left: 4px;
+  bottom: 2px;
+  font-size: 10px;
+  color: #6cff8a;
+  pointer-events: none;
+}
+
 /* 版：ゲーム画面の右下の隅（LLM-GUI-0001 §1） */
 #app-version {
   position: absolute;

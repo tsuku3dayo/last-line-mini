@@ -1,5 +1,6 @@
 import './style.css';
 import { chooseSeed, exposeDebugApi, readDebugParams } from './app/debug';
+import { showFps } from './app/fps';
 import { createInput } from './app/input';
 import { watchLayout } from './app/layout';
 import { startLoop } from './app/loop';
@@ -70,6 +71,7 @@ if (debug) {
     },
   });
   body.dataset.debug = '1';
+  showFps(stage);
 }
 
 setupPwa();
