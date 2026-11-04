@@ -18,7 +18,7 @@ test.describe('PWA の骨組み', () => {
     await context.setOffline(true);
     await page.reload();
     await expect(page.locator('body')).toHaveAttribute('data-channel', 'preview');
-    await expect(page.locator('#app-version')).toHaveText(/^v\d+\.\d+\.\d+ β$/);
+    await expect(page.locator('#app-version')).toHaveText(/^v\d+\.\d+\.\d+ β( [0-9a-f]{7})?$/);
     await context.setOffline(false);
   });
 

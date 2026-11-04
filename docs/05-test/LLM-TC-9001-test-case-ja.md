@@ -3,8 +3,8 @@ id: LLM-TC-9001
 type: test-case
 title: 土台・公開（非機能）
 status: stable
-version: 1.3
-updated: 2026-11-02
+version: 1.4
+updated: 2026-11-04
 sources:
   - LLM-TST-0001（v1.1）§3
   - LLM-SA-0001（v1.0）§2・§3
@@ -14,7 +14,7 @@ verified: null
 
 # LLM-TC-9001 テストケース（土台・公開）
 
-どの PBI にも属さない非機能の確認（LLM-TST-0001 §3）。04〜06 は LLM-TASK-0002（公開・PWA の骨組み）で足した。
+どの PBI にも属さない非機能の確認（LLM-TST-0001 §3）。04〜06 は LLM-TASK-0002（公開・PWA の骨組み）で、13 は LLM-TASK-0009（プレビューの版にマージの印）で足した。
 
 | 確認 ID | 確かめること | 方法 | 場所 |
 | :--- | :--- | :--- | :--- |
@@ -30,3 +30,4 @@ verified: null
 | LLM-TC-9001-10 | ゲーム画面（480 × 640）が、安全領域を引いた窓の中に縦横の比を保って最大の大きさで収まる。版は画面の右下 | 自動（単体・E2E 3 端末） | `tests/unit/skeleton.test.ts`、`e2e/skeleton.spec.ts` |
 | LLM-TC-9001-11 | `?debug=1&seed=` でテスト用の入口（`window.__llm`）が出て、止めたまま決まったステップだけ進められる。`?debug=1` がなければ出ない | 自動（単体・E2E） | `tests/unit/skeleton.test.ts`、`e2e/skeleton.spec.ts` |
 | LLM-TC-9001-12 | 地形・基地 3 つ（残弾 10）・都市 6 つ・HUD（1P・TOP）が LLM-GUI-0001 の位置と色で描かれる | 自動（単体）＋ 手動（スクリーンショット・実機） | `tests/unit/skeleton.test.ts`、手動：PBI-0001 の実機確認で見る |
+| LLM-TC-9001-13 | プレビューの版に、build したコミットの短い番号（7 桁）が付く（例：`v0.1.0 β aefcdbd`）。本番には付かない | 自動（単体・E2E） | `tests/unit/version.test.ts`、`e2e/smoke.spec.ts` |

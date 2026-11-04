@@ -43,6 +43,9 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: npm }
       - run: npm ci
+      # コンテナの中のチェックアウトには git の履歴がないので、版に付けるコミットの番号を渡す（LLM-TC-9001-13）
+      - run: echo "APP_COMMIT=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+        shell: bash
       - run: npm run build
       - run: npm run test:e2e
       - if: failure()

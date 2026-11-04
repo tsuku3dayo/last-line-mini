@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vitest/config';
@@ -8,12 +9,23 @@ const config = CHANNELS[channel];
 const ICON_DIR = `icons/${channel}`;
 // 画面に出す版。package.json の version を埋め込む（src/vite-env.d.ts）
 const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
+// プレビューの版に付けるコミットの短い番号（LLM-TC-9001-13）。build-pages.sh では origin/main の worktree で build するので、マージのコミットになる
+const commit = (() => {
+  // CI のコンテナの中（git の履歴がない）では、ワークフローが APP_COMMIT を渡す
+  if (process.env.APP_COMMIT) return process.env.APP_COMMIT;
+  try {
+    return execSync('git rev-parse --short=7 HEAD', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  } catch {
+    return ''; // git がないところでは付けない
+  }
+})();
 
 export default defineConfig({
   base: config.base,
   define: {
     __APP_VERSION__: JSON.stringify(version),
     __APP_CHANNEL__: JSON.stringify(channel),
+    __APP_COMMIT__: JSON.stringify(channel === 'preview' ? commit : ''),
   },
   build: { target: 'es2022' },
   plugins: [
