@@ -28,7 +28,7 @@ export interface InputSource {
 }
 
 /**
- * キーボード（方向キー）とマウス（Pointer Events）を、ステップごとの入力にまとめる（テンプレート §5.3）。
+ * キーボード（方向キー）・マウス・タッチ（Pointer Events）を、ステップごとの入力にまとめる（テンプレート §5.3）。
  * 文字の入力欄で打っている文字はゲームの操作にしない。
  */
 export function createInput(stage: HTMLElement): InputSource {
@@ -58,9 +58,18 @@ export function createInput(stage: HTMLElement): InputSource {
   // 窓から離れたら、押したままのキーを離したことにする
   window.addEventListener('blur', () => held.clear());
 
+  // 指が付いた点。次に読むまでためる（同じステップに 2 本の指なら 2 点）
+  let taps: { x: number; y: number }[] = [];
+
   stage.addEventListener('pointermove', (e) => {
-    if (e.pointerType !== 'mouse') return; // タッチは LLM-PBI-0002
+    // マウスだけ。タッチは指をすべらせても照準を動かさない（LLM-GUI-0002 §2）
+    if (e.pointerType !== 'mouse') return;
     pointer = toLogical(e.clientX, e.clientY, stage.getBoundingClientRect());
+  });
+  stage.addEventListener('pointerdown', (e) => {
+    // タッチで指が付いた瞬間だけ撃つ（LLM-PBI-0002 案 C）。マウスのクリックでは撃たない（LLM-GUI-0001 §3）
+    if (e.pointerType !== 'touch') return;
+    taps.push(toLogical(e.clientX, e.clientY, stage.getBoundingClientRect()));
   });
 
   return {
@@ -71,9 +80,11 @@ export function createInput(stage: HTMLElement): InputSource {
       };
       const p = pointer;
       const f: FireButtons = fire;
+      const t = taps;
       pointer = null;
       fire = [false, false, false];
-      return { move, pointer: p, fire: f };
+      taps = [];
+      return { move, pointer: p, fire: f, taps: t };
     },
   };
 }
