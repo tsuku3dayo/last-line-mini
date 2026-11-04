@@ -37,6 +37,37 @@ test('LLM-TC-0004-04 ?debug=1 のとき、PC の G キーでその場で GAME OV
   await expect(page.locator('body')).toHaveAttribute('data-status', 'gameover');
 });
 
+test('LLM-TC-0004-03 LLM-TC-0004-06 CLEAR で「DEFENSE COMPLETE」、約 1 秒あとに触るか押すと WAVE 1 から', async ({ page, isMobile }) => {
+  await openFrozen(page);
+  const body = page.locator('body');
+  await advance(page, BREAK_STEPS + 1);
+  // 最後のウェーブの敵をすべて出し終え、画面の敵がいない状態にする
+  await page.evaluate(() => {
+    const api = window.__llm;
+    if (!api) throw new Error('テスト用の入口がない');
+    const s = api.getState();
+    api.setState({ ...s, enemies: [], wave: { number: 4, status: 'playing', phaseStep: 999, spawned: 15 } });
+  });
+  await advance(page, 1);
+  await expect(body).toHaveAttribute('data-status', 'clear');
+  await expect(body).toHaveAttribute('data-message', 'DEFENSE COMPLETE');
+
+  const box = await page.locator('#stage').boundingBox();
+  if (!box) throw new Error('ゲーム画面がない');
+  const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  const poke = async () => (isMobile ? page.touchscreen.tap(center.x, center.y) : page.keyboard.press('Space'));
+
+  await poke(); // 約 1 秒たつ前は受け付けない
+  await expect(body).toHaveAttribute('data-status', 'clear');
+  await advance(page, 120);
+  await expect(body).toHaveAttribute('data-message', 'DEFENSE COMPLETE|TAP OR PRESS ANY KEY');
+  await poke();
+  await expect(body).toHaveAttribute('data-status', 'break');
+  await expect(body).toHaveAttribute('data-wave', '1');
+  await expect(body).toHaveAttribute('data-message', 'WAVE 1');
+  await expect(body).toHaveAttribute('data-ammo', '10,10,10'); // やり直しの操作で撃っていない
+});
+
 test('LLM-TC-0004-02 WAVE 1 のあいだ → WAVE 1 → 敵がいなくなると WAVE 2 のあいだ → 弾が 10 発に戻って WAVE 2', async ({ page }) => {
   await openFrozen(page);
   const body = page.locator('body');

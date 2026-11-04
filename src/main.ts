@@ -8,7 +8,9 @@ import { setupPwa } from './app/pwa';
 import { guardTouch } from './app/touch-guard';
 import { formatVersion } from './app/version';
 import { createGame, forceGameOver, step, type GameState, type StepInput } from './core/game';
+import { isOver } from './core/wave';
 import { render } from './render/canvas';
+import { canRestart, overlayTexts } from './render/overlay';
 
 // 組み立て（ここだけが全部の層を知る）。タイトル画面は LLM-PBI-0006 で足すので、今は開くとすぐプレイが始まる
 const versionText = formatVersion(__APP_VERSION__, __APP_CHANNEL__, __APP_COMMIT__);
@@ -46,7 +48,32 @@ const draw = () => {
   body.dataset.ammo = state.bases.map((b) => b.ammo).join(',');
   body.dataset.wave = String(state.wave.number);
   body.dataset.status = state.wave.status;
+  body.dataset.message = overlayTexts(state.wave)
+    .map((o) => o.text)
+    .join('|');
 };
+
+/**
+ * やり直し（LLM-TC-0004-06）：終わってから約 1 秒たっていれば、キー・タッチ・クリックで WAVE 1 から。
+ * 新しい乱数の種で始める（`?debug=1&seed=` のときは同じ種）。やり直しの操作が新しいゲームの 1 発にならないよう、たまった入力は捨てる
+ */
+const restartIfReady = (): boolean => {
+  if (!canRestart(state.wave)) return false;
+  state = createGame(chooseSeed(fixedSeed));
+  input.read();
+  draw();
+  return true;
+};
+window.addEventListener('pointerdown', () => restartIfReady());
+window.addEventListener('keydown', (e) => {
+  if (e.target instanceof HTMLInputElement) return;
+  if (restartIfReady()) return;
+  // 実機確認用：G キーでその場で GAME OVER にする（`?debug=1` のときだけ。PO の決定、スプリント 04）
+  if (debug && e.code === 'KeyG' && !isOver(state.wave.status)) {
+    state = forceGameOver(state);
+    draw();
+  }
+});
 
 watchLayout(stage, canvas, (layout, dpr) => {
   transform = { scale: layout.scale, dpr };
@@ -74,12 +101,6 @@ if (debug) {
   });
   body.dataset.debug = '1';
   showFps(stage);
-  // 実機確認用：G キーでその場で GAME OVER にする（`?debug=1` のときだけ。PO の決定、スプリント 04）
-  window.addEventListener('keydown', (e) => {
-    if (e.code !== 'KeyG' || e.target instanceof HTMLInputElement) return;
-    state = forceGameOver(state);
-    draw();
-  });
 }
 
 setupPwa();

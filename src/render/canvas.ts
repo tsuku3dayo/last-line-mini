@@ -7,6 +7,7 @@ import { groundProfile } from '../core/terrain';
 import { COLORS } from './colors';
 import { textPixels, textWidth } from './font';
 import { hud1pText, hudTopText } from './hud';
+import { overlayTexts } from './overlay';
 
 const FONT_SCALE = 2;
 const PROFILE = groundProfile();
@@ -166,4 +167,7 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, view: { 
   // HUD（y = 8〜24）
   drawText(ctx, hud1pText(view.score), 8, 8, COLORS.hud1p);
   drawText(ctx, hudTopText(view.topScore), LOGICAL_WIDTH - 8, 8, COLORS.hudTop, FONT_SCALE, 'right');
+
+  // ウェーブと終わりの表示（LLM-GUI-0001 §5）。画面の中央にそろえる
+  for (const o of overlayTexts(state.wave)) drawText(ctx, o.text, LOGICAL_WIDTH / 2, o.y, o.color, o.scale, 'center');
 }
