@@ -8,6 +8,11 @@ describe('画面の版と、本番・プレビューの分け方', () => {
     expect(formatVersion('0.1.0', 'production')).toBe('v0.1.0');
   });
 
+  it('LLM-TC-9001-13 プレビューの版にはコミットの短い番号が付き、本番には付かない', () => {
+    expect(formatVersion('0.1.0', 'preview', 'aefcdbd')).toBe('v0.1.0 β aefcdbd');
+    expect(formatVersion('0.1.0', 'production', 'aefcdbd')).toBe('v0.1.0');
+  });
+
   it('LLM-TC-9001-01 APP_CHANNEL の指定がなければプレビュー、知らない値はエラー', () => {
     expect(resolveChannel(undefined)).toBe('preview');
     expect(resolveChannel('production')).toBe('production');

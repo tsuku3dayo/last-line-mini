@@ -9,7 +9,7 @@ import { createGame, step, type GameState, type StepInput } from './core/game';
 import { render } from './render/canvas';
 
 // 組み立て（ここだけが全部の層を知る）。タイトル画面は LLM-PBI-0006 で足すので、今は開くとすぐプレイが始まる
-const versionText = formatVersion(__APP_VERSION__, __APP_CHANNEL__);
+const versionText = formatVersion(__APP_VERSION__, __APP_CHANNEL__, __APP_COMMIT__);
 const body = document.body;
 body.dataset.version = versionText;
 body.dataset.channel = __APP_CHANNEL__;
