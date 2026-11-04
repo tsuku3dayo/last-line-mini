@@ -2,7 +2,7 @@ import { stepBlasts, type Blast } from './blast';
 import { AMMO_PER_BASE, BASE_XS, CITY_XS } from './config';
 import { INITIAL_CURSOR, stepCursor, type Cursor, type MoveDir } from './cursor';
 import { chooseBase, clampTap, type Point } from './touch';
-import { spawnEnemy, stepEnemies, stepImpacts, type EnemyMissile, type Impact } from './enemy';
+import { enemyHead, spawnEnemy, stepEnemies, stepImpacts, type EnemyMissile, type Impact } from './enemy';
 import { launch, stepInterceptors, type Interceptor } from './interceptor';
 import { seedState } from './random';
 
@@ -102,7 +102,7 @@ function cursorAfterTaps(cursor: Cursor, taps: readonly Point[]): Cursor {
   return { x: p.x, y: p.y, vx: 0, vy: 0 };
 }
 
-/** 1 ステップ進める。順番：照準 → 発射（キー → 触った点）→ 迎撃ミサイル → 爆風 → 敵が出る → 敵が動く（爆風で消える・地面に着く） */
+/** 1 ステップ進める。順番：照準 → 発射（キー → 触った点）→ 迎撃ミサイル → 爆風 → 敵が出る → 敵が動く（爆風で消える・地面に着く）→ 誘爆の爆風を足す */
 export function step(state: GameState, input: StepInput): GameState {
   const taps = input.taps ?? [];
   const aimed = stepCursor(state.cursor, input.move, input.pointer);
@@ -116,6 +116,9 @@ export function step(state: GameState, input: StepInput): GameState {
   const spawned = spawnEnemy(state.step, state.rng);
   const enemies = stepEnemies(spawned.enemy ? [...state.enemies, spawned.enemy] : state.enemies, blasts);
   const landedAt = enemies.landed.map((m) => ({ x: m.toX, y: m.toY, age: 0 }));
+  // 誘爆（LLM-PBI-0003）：爆風で壊れた敵の弾頭の場所に、迎撃と同じ爆風を出す。
+  // このステップの判定が終わってから足すので、次のステップから効く（1 ステップの中で連鎖が止まらなくなるのを防ぐ）
+  const chained = enemies.destroyed.map((m) => ({ ...enemyHead(m), age: 0 }));
   return {
     ...state,
     step: state.step + 1,
@@ -123,7 +126,7 @@ export function step(state: GameState, input: StepInput): GameState {
     bases: tapped.bases,
     rng: spawned.rng,
     interceptors: moved.flying,
-    blasts,
+    blasts: [...blasts, ...chained],
     enemies: enemies.flying,
     impacts: [...stepImpacts(state.impacts), ...landedAt],
   };
