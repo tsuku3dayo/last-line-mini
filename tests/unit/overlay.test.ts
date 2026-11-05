@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { WaveProgress } from '../../src/core/wave';
-import { canRestart, overlayTexts, RESTART_DELAY_STEPS } from '../../src/render/overlay';
+import { canRestart, overlayTexts, RESTART_DELAY_STEPS, showCursor } from '../../src/render/overlay';
 
 const w = (status: WaveProgress['status'], phaseStep = 0, number = 1): WaveProgress => ({ number, status, phaseStep, spawned: 0 });
 const texts = (x: WaveProgress) => overlayTexts(x).map((o) => o.text);
@@ -38,5 +38,15 @@ describe('ウェーブと終わりの表示（LLM-GUI-0001 §5）', () => {
     expect(shown(60)).toBe(false);
     expect(shown(119)).toBe(false);
     expect(shown(120)).toBe(true);
+  });
+
+  it('LLM-TC-0004-08 CLEAR・GAME OVER のあいだは照準を描かない。WAVE 1 からやり直すと描く', () => {
+    for (const s of ['clear', 'gameover'] as const) {
+      expect(showCursor(w(s, 0))).toBe(false);
+      expect(showCursor(w(s, RESTART_DELAY_STEPS))).toBe(false);
+    }
+    // やり直したあと（WAVE 1 のあいだ）と、遊んでいるあいだは描く
+    expect(showCursor(w('break', 0, 1))).toBe(true);
+    expect(showCursor(w('playing', 500, 3))).toBe(true);
   });
 });

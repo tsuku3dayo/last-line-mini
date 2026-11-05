@@ -19,6 +19,9 @@ export interface OverlayText {
 /** やり直してよいか：CLEAR か GAME OVER になってから約 1 秒たった（それより前の操作は受け付けない） */
 export const canRestart = (w: WaveProgress): boolean => isOver(w.status) && w.phaseStep >= RESTART_DELAY_STEPS;
 
+/** 照準の「＋」を描くか：CLEAR・GAME OVER のあいだは描かない（中央の文字と重ならないように。LLM-GUI-0001 §5） */
+export const showCursor = (w: WaveProgress): boolean => !isOver(w.status);
+
 /** 今出す文字（上から順） */
 export function overlayTexts(w: WaveProgress): OverlayText[] {
   const out: OverlayText[] = [];

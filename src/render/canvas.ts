@@ -7,7 +7,7 @@ import { groundProfile } from '../core/terrain';
 import { COLORS } from './colors';
 import { textPixels, textWidth } from './font';
 import { hud1pText, hudTopText } from './hud';
-import { overlayTexts } from './overlay';
+import { overlayTexts, showCursor } from './overlay';
 
 const FONT_SCALE = 2;
 const PROFILE = groundProfile();
@@ -162,7 +162,7 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, view: { 
   for (const i of state.impacts) drawImpact(ctx, i);
   for (const m of state.interceptors) drawInterceptor(ctx, m);
   for (const b of state.blasts) drawBlast(ctx, b, state.step);
-  drawCursor(ctx, state.cursor.x, state.cursor.y);
+  if (showCursor(state.wave)) drawCursor(ctx, state.cursor.x, state.cursor.y);
 
   // HUD（y = 8〜24）
   drawText(ctx, hud1pText(view.score), 8, 8, COLORS.hud1p);

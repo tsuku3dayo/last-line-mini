@@ -3,15 +3,15 @@ id: LLM-GUI-0001
 type: gui-design
 title: プレイ画面（PC）
 status: stable
-version: 1.3
-updated: 2026-11-04
+version: 1.4
+updated: 2026-11-05
 sources:
   - LLM-PBI-0001（v1.0）
   - LLM-PBI-0003（v1.0）
   - LLM-PBI-0004（v1.0）
   - LLM-SA-0001（v1.0）§4
   - docs/spec/last-line-mini-spec.md (v1.1) §6.1
-verified: { by: オーナー, at: 2026-11-04T16:53:12+09:00 }
+verified: { by: オーナー, at: 2026-11-05T10:47:28+09:00 }
 ---
 
 # LLM-GUI-0001 プレイ画面（PC）
@@ -103,6 +103,7 @@ y≒340   │        TAP OR PRESS ANY KEY          │ ← 終わりの約 1 秒
 | CLEAR | 「DEFENSE COMPLETE」。画面の都市・基地はそのまま見える |
 | GAME OVER | ゲームがその場で止まり（敵・爆風も止まる）、その上に「THE END」 |
 | 終わりの約 1 秒あと | 「TAP OR PRESS ANY KEY」を点滅。触るかキーを押すと WAVE 1 から |
+| CLEAR・GAME OVER のあいだ | 照準の「＋」を描かない（中央の文字と重ならないように。v1.4、実機確認で PO が決めた）。触るか押して WAVE 1 になると、また描く |
 
 ## 6. PO に決めてほしいこと（LLM-PBI-0001 のとき）
 
