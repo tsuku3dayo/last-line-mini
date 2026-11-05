@@ -3,11 +3,11 @@ id: LLM-TC-0004
 type: test-case
 title: 1 面がウェーブで進み、CLEAR か GAME OVER で終わる
 status: stable
-version: 1.0
-updated: 2026-11-04
+version: 1.1
+updated: 2026-11-05
 sources:
   - LLM-PBI-0004（v1.0）
-  - LLM-GUI-0001（v1.3）
+  - LLM-GUI-0001（v1.4）
 verified: null
 ---
 
@@ -24,3 +24,4 @@ verified: null
 | LLM-TC-0004-05 | 弾が 0・迎撃と爆風なし・残っている都市を狙う敵が飛んでいる、がそろうと GAME OVER。どれか 1 つでも欠けると続く | 自動（単体） | `tests/unit/wave.test.ts` |
 | LLM-TC-0004-06 | 演出の約 1 秒あとに「TAP OR PRESS ANY KEY」が出て、触るかキーで WAVE 1 から始まる。それより前の操作は受け付けない | 自動（単体・E2E） | `tests/unit/wave.test.ts`、`e2e/flow.spec.ts` |
 | LLM-TC-0004-07 | PC の Chrome と iPhone 11 のプレビューで、1 プレイを最後まで遊べる（約 3 分） | 手動（実機） | 手順：右下の番号を確かめる → WAVE 1〜4 を遊ぶ → CLEAR か GAME OVER のあと、触るか押して最初から |
+| LLM-TC-0004-08 | CLEAR・GAME OVER のあいだは照準を描かない。WAVE 1 からやり直すと描く（LLM-GUI-0001 v1.4 §5。実機確認の結果から足した） | 自動（単体）＋スクリーンショット | `tests/unit/overlay.test.ts` |
