@@ -3,20 +3,21 @@ id: LLM-GUI-0001
 type: gui-design
 title: プレイ画面（PC）
 status: stable
-version: 1.4
+version: 1.5
 updated: 2026-11-05
 sources:
   - LLM-PBI-0001（v1.0）
   - LLM-PBI-0003（v1.0）
   - LLM-PBI-0004（v1.0）
+  - LLM-PBI-0005（v1.0）
   - LLM-SA-0001（v1.0）§4
   - docs/spec/last-line-mini-spec.md (v1.1) §6.1
-verified: { by: オーナー, at: 2026-11-05T10:47:28+09:00 }
+verified: { by: オーナー, at: 2026-11-05T11:47:18+09:00 }
 ---
 
 # LLM-GUI-0001 プレイ画面（PC）
 
-LLM-PBI-0001 の分に、LLM-PBI-0003（誘爆・壊れた都市と基地の見た目、§4）と LLM-PBI-0004（ウェーブと終わりの表示、§5）を足した。iPhone のタッチの分は LLM-GUI-0002。
+LLM-PBI-0001 の分に、LLM-PBI-0003（誘爆・壊れた都市と基地の見た目、§4）と LLM-PBI-0004（ウェーブと終わりの表示、§5）、LLM-PBI-0005（終わりのボーナスの内訳・照準の始めの位置、§5）を足した。iPhone のタッチの分は LLM-GUI-0002。
 
 ## 1. 配置（論理の大きさ 480 × 640、縦長）
 
@@ -93,9 +94,15 @@ y≒280   │               WAVE 2                 │ ← ウェーブのあい
         │                                      │
 y≒280   │          DEFENSE COMPLETE            │ ← CLEAR。3 倍、#6cff8a（緑）
 y≒280   │               THE END                │ ← GAME OVER。4 倍、#ff5a3c（赤橙）
-y≒340   │        TAP OR PRESS ANY KEY          │ ← 終わりの約 1 秒あとから。2 倍、#e0e0e0 で 0.5 秒ごとに点滅
+y≒330   │       MISSILES 12 X 5     60         │ ← 終わりのボーナスの内訳（LLM-PBI-0005、v1.5）。2 倍、#e0e0e0
+y≒354   │       CITIES    4 X 100  400         │ ← 同上（GAME OVER のときは CITIES 0 X 100 0）
+y≒400   │        TAP OR PRESS ANY KEY          │ ← 終わりの約 1 秒あとから。2 倍、#e0e0e0 で 0.5 秒ごとに点滅（v1.5 で y 340 → 400）
         └──────────────────────────────────────┘
 ```
+
+- 終わりのボーナスの内訳（LLM-PBI-0005）：終わった瞬間から出す。同じ瞬間に、残弾 × 5 と残った都市 × 100 を足した点を HUD の `1P` に出す（数え上げの動きは付けない）。
+- 照準の始めの位置（LLM-PBI-0005、v1.5）：(240, 420)（「WAVE 1」の文字 y = 280〜308 と重ならないように。v1.4 までは (240, 300)）。WAVE 2 からは、プレイヤーが置いた所のまま。
+- HUD の `TOP` は、LLM-PBI-0006 までは `000000` のまま。
 
 | 場面 | 表示 |
 | :--- | :--- |
