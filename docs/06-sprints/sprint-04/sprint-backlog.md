@@ -22,7 +22,7 @@ PC と iPhone のプレビューで、1 面が 4 つのウェーブで進み、�
 | LLM-TASK-0017 | ウェーブの進行：4 ウェーブ（仮：6・9・12・15）、あいだ約 3 秒は敵が出ない、壊れていない基地を 10 発に戻す。`data-wave`・`data-status` を出す | PBI-0004 | TC-0004-01, 02, 03 | 0016 | feat/TASK-0017-waves | 済 | #30 |
 | LLM-TASK-0018 | 終わりの判定：CLEAR、6 都市が全部壊れたら GAME OVER（その場で止まる）、弾が尽きて止められないときの GAME OVER。`?debug=1` のときだけ G キーで GAME OVER | PBI-0004 | TC-0004-04, 05（03 は TASK-0017 へ移した） | 0017 | feat/TASK-0018-end | 済 | #31 |
 | LLM-TASK-0019 | 終わりの表示とやり直し：WAVE n・DEFENSE COMPLETE・THE END・TAP OR PRESS ANY KEY（約 1 秒あとから）、触るか押すと WAVE 1 から（新しい種）。PBI の最後の TASK（このあと PC の Chrome と iPhone 11 で実機確認 TC-0004-07） | PBI-0004 | TC-0004-06, 07 | 0018 | feat/TASK-0019-end-screen | 済 | #32 |
-| LLM-TASK-0020 | 終わったとき（CLEAR・GAME OVER のあいだ）は照準の「＋」を描かない（実機確認の 8 で PO が決めた。GUI-0001 v1.4・TC-0004 v1.1） | PBI-0004 | TC-0004-08 | 0019 | feat/TASK-0020-hide-cursor | レビュー待ち | — |
+| LLM-TASK-0020 | 終わったとき（CLEAR・GAME OVER のあいだ）は照準の「＋」を描かない（実機確認の 8 で PO が決めた。GUI-0001 v1.4・TC-0004 v1.1） | PBI-0004 | TC-0004-08 | 0019 | feat/TASK-0020-hide-cursor | レビュー待ち | #33 |
 
 ### 確認 ID の割り当ての点検（TEAM 5.5）
 
