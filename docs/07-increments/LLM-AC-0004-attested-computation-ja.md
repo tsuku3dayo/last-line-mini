@@ -2,7 +2,7 @@
 id: LLM-AC-0004
 type: attested-computation
 title: 1 面がウェーブで進み、CLEAR か GAME OVER で終わる
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-05
 sources:
@@ -10,12 +10,12 @@ sources:
   - LLM-TC-0004（v1.1）
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0016〜0020（スプリント 04。PR #29〜#33）
-verified: null
+verified: { by: オーナー, at: 2026-11-05T11:19:18+09:00 }
 ---
 
 # LLM-AC-0004 インクリメントの実施記録
 
-LLM-PBI-0004 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 04 のスプリントレビューで PO の受け入れを待つ。
+LLM-PBI-0004 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 04 のスプリントレビュー（2026-11-05）で PO が受け入れた。
 
 - 対象の版：1 プレイの実機確認（TC-0004-07）はプレビュー `v0.1.0 β 6e5adc3`（PR #32 のマージ）。照準を隠す確認（TC-0004-08）はプレビュー `v0.1.0 β e0d4bff`（PR #33 のマージ）。自動テストは main `e0d4bff`
 - 公開：GitHub Actions「Pages」run 41951955458（success）→ https://tsuku3dayo.github.io/last-line-mini/preview/
