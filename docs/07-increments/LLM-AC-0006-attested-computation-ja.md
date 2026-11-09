@@ -2,7 +2,7 @@
 id: LLM-AC-0006
 type: attested-computation
 title: タイトル画面で TOP10 を見て始められる（保存・ランクイン判定）
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-09
 sources:
@@ -10,12 +10,12 @@ sources:
   - LLM-TC-0006（v1.0）
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0027〜0028（スプリント 06。PR #46・#47）
-verified: null
+verified: { by: オーナー, at: 2026-11-09T17:08:02+09:00 }
 ---
 
 # LLM-AC-0006 インクリメントの実施記録
 
-LLM-PBI-0006 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 06 のスプリントレビューで PO の受け入れを受ける。
+LLM-PBI-0006 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 06 のスプリントレビュー（2026-11-09）で PO が受け入れた。
 
 - 対象の版：プレビュー `v0.1.0 β 0b60720`（PR #50 のマージ。PBI-0007 の直しと診断の取り外しまで入った最終の版）。自動テストは main `0b60720`
 - 公開：GitHub Actions「Pages」run 42582229606（success）→ https://tsuku3dayo.github.io/last-line-mini/preview/
