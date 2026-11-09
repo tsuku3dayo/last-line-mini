@@ -5,7 +5,7 @@ import { createInput } from './app/input';
 import { watchLayout } from './app/layout';
 import { startLoop } from './app/loop';
 import { setupPwa } from './app/pwa';
-import { guardTouch } from './app/touch-guard';
+import { guardTouch, isInteractive } from './app/touch-guard';
 import { formatVersion } from './app/version';
 import { createGame, forceGameOver, step, type GameState, type StepInput } from './core/game';
 import { insertRecord, topScore, type RankRecord } from './core/ranking';
@@ -173,6 +173,12 @@ const poke = (): boolean => {
   return true;
 };
 window.addEventListener('pointerdown', () => poke());
+// マウスで入力欄・ボタン以外（ゲーム画面）を押しても、入力欄から外さない（LLM-TASK-0033）。
+// 終わりの画面をクリックして名前の画面に入ったとき、同じクリックの続きの mousedown でブラウザが入力欄から外し、
+// 打った文字が届かなかった（PC はクリックで遊ぶようになって表に出た。LLM-PBI-0019）
+window.addEventListener('mousedown', (e) => {
+  if (!isInteractive(e.target)) e.preventDefault();
+});
 window.addEventListener('keydown', (e) => {
   if (e.target instanceof HTMLInputElement) return;
   if (poke()) return;

@@ -4,13 +4,13 @@ type: product-backlog-item
 title: PC でもマウスのクリックで、近い発射台から撃てる
 theme: 迎撃の基本
 status: stable
-version: 1.0
+version: 1.1
 updated: 2026-11-09
 sources:
   - LLM-PG-0001（v1.1）
   - LLM-PBI-0002（v1.0）
   - LLM-GUI-0002（v1.0）
-verified: { by: オーナー, at: 2026-11-09T17:44:52+09:00 }
+verified: { by: オーナー, at: 2026-11-09T18:11:30+09:00 }
 ---
 
 # LLM-PBI-0019 PC でもマウスのクリックで、近い発射台から撃てる
@@ -55,4 +55,5 @@ LLM-GUI-0001 §3（操作。v1.7）。iPhone は LLM-GUI-0002 のまま。
 | 承認のない成果物 | LLM-TC-0001 v1.2 | 01（方向キーの慣性）をなくし、03・05・08 の「Z・X・C」をクリックに |
 | テストのコード／実装 | `src/app/input.ts`・`src/core/cursor.ts`、`e2e/play-pc.spec.ts`、`tests/unit/cursor.test.ts` | キーボードの入力と方向キーの慣性をなくし、クリックで撃つ。前の TASK のテストの前提が変わるものだけ直す |
 | 版の表記だけ直すもの | GUI-0001 を sources に持つ成果物 | 表記 |
-| 直さないもの | LLM-AC-0001 | 受け入れたときの記録（sources の表記は直す） |
+| 直さないもの | LLM-AC-0001・0002 | 受け入れたときの記録（sources の表記は直す） |
+| あとで見つけたもの（v1.1、TASK-0033 の実装中） | LLM-TC-0002 v1.1、`e2e/play-pc.spec.ts` | TC-0002-06「PC ではマウスのクリックでは撃たない」（LLM-PBI-0002）が、この PBI と逆になる。TC-0001-01 と同じく「なくした」の印を付け、E2E は TC-0019-01（クリックで撃つ）に置き換える |

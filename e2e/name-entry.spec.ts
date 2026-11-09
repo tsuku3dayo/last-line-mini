@@ -38,6 +38,26 @@ test('LLM-TC-0007-01 ランクインしたら名前の入力の画面になり�
   expect(ok.y + ok.height).toBeLessThanOrEqual(stage.y + stage.height * 0.52);
 });
 
+test('LLM-TC-0007-01 PC で終わりの画面をクリックして名前の画面に入っても、そのまま打てる（入力欄から外れない）', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'マウスは PC だけ');
+  await openFrozen(page);
+  await advance(page, 1);
+  await page.evaluate(() => {
+    const api = window.__llm;
+    if (!api) throw new Error('テスト用の入口がない');
+    const s = api.getState();
+    api.setState({ ...s, score: 500, wave: { ...s.wave, status: 'gameover', phaseStep: 0 } });
+  });
+  await advance(page, 120);
+  const box = await page.locator('#stage').boundingBox();
+  if (!box) throw new Error('ゲーム画面がない');
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.9); // OK の下ではない所（TEAM 5.2 v1.4）
+  await expect(page.locator('body')).toHaveAttribute('data-screen', 'name');
+  await expect(page.locator('#name-input')).toBeFocused(); // クリックの続きで外れていない（TASK-0033 で直した）
+  await page.keyboard.type('pc');
+  await expect(page.locator('#name-input')).toHaveValue('PC');
+});
+
 test('LLM-TC-0007-01 ランクインしなかったら、名前の入力をせず TOP10 の画面へ', async ({ page, isMobile }) => {
   await presetStorage(page, PREVIEW_RANKING_KEY, JSON.stringify(Array.from({ length: 10 }, (_, i) => record(1000 - i * 10, `P${i}`))));
   await openFrozen(page);
