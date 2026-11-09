@@ -61,11 +61,30 @@ test('LLM-TC-0007-03 空のまま確定すると名前は ...（PC は OK のク
   await openFrozen(page);
   await endAndPoke(page, isMobile, 300);
   await expect(page.locator('body')).toHaveAttribute('data-screen', 'name');
+  await advance(page, 120);
   if (isMobile) await page.locator('#name-ok').tap();
   else await page.locator('#name-ok').click();
   await expect(page.locator('body')).toHaveAttribute('data-screen', 'top10');
   expect((await rowsOf(page))[1]).toBe(' 1  ...  000300');
   expect((await saved(page))[0]?.name).toBe('...');
+});
+
+test('LLM-TC-0007-03 名前の画面が出てから約 1 秒は、OK・Enter で確定しない（終わりの画面を触った操作が OK に届いても進まない）', async ({ page, isMobile }) => {
+  await openFrozen(page);
+  await endAndPoke(page, isMobile, 400);
+  const body = page.locator('body');
+  await expect(body).toHaveAttribute('data-screen', 'name');
+  // すぐ OK（iPhone で起きた、同じ操作のクリックが指の下の OK に届く場合にあたる）と Enter
+  if (isMobile) await page.locator('#name-ok').tap();
+  else await page.locator('#name-ok').click();
+  await page.locator('#name-input').press('Enter');
+  await advance(page, 119); // ふちの少し内側（119 ステップ）でも受け付けない
+  await page.locator('#name-input').press('Enter');
+  await expect(body).toHaveAttribute('data-screen', 'name');
+  await expect(page).toHaveURL(/debug=1/); // ページは読み込み直されていない
+  await advance(page, 1); // ちょうど 120 ステップで受け付ける
+  await page.locator('#name-input').press('Enter');
+  await expect(body).toHaveAttribute('data-screen', 'top10');
 });
 
 test('LLM-TC-0007-05 名前を打っているあいだ、キーでゲームが始まらず、画面も切り替わらない', async ({ page, isMobile }) => {
