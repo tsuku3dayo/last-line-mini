@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, openFrozen, poke, presetStorage, PREVIEW_RANKING_KEY, PRODUCTION_RANKING_KEY } from './helpers';
+import { advance, confirmName, openFrozen, poke, presetStorage, PREVIEW_RANKING_KEY, PRODUCTION_RANKING_KEY } from './helpers';
 
 // TOP10 の保存と HUD の TOP（LLM-PBI-0006）。PC でも iPhone でも確かめる
 
@@ -83,7 +83,8 @@ test('LLM-TC-0006-04 LLM-TC-0006-06 ランクインした点が TOP10 の画面�
   await endWithScore(page, 500);
   await advance(page, 120);
   await poke(page, isMobile);
-  await expect(page.locator('body')).toHaveAttribute('data-screen', 'top10');
+  // LLM-PBI-0007 から：ランクインしたら先に名前の入力（空のまま確定すると ...）
+  await confirmName(page, isMobile);
   const rows = await rowsOf(page);
   expect(rows.slice(0, 4)).toEqual(['TOP 10', ' 1  AAA  000900', ' 2  ...  000500', ' 3  LOW  000100']);
   expect(rows).toContain('YOUR SCORE 000500');
