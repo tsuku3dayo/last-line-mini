@@ -3,7 +3,8 @@ import { advance, openFrozen } from './helpers';
 
 test('LLM-TC-9001-10 ゲーム画面が窓の中に 3:4 の比で収まり、版が画面の右下にある', async ({ page }) => {
   await page.goto('./');
-  await expect(page.locator('body')).toHaveAttribute('data-screen', 'play');
+  // LLM-PBI-0006 から、開くとタイトル画面
+  await expect(page.locator('body')).toHaveAttribute('data-screen', 'title');
   const vp = page.viewportSize();
   const box = await page.locator('#stage').boundingBox();
   expect(vp && box).toBeTruthy();
@@ -36,7 +37,7 @@ test('LLM-TC-9001-11 ?debug=1 でテスト用の入口が出て、止めたま�
 
 test('LLM-TC-9001-11 ?debug=1 がなければテスト用の入口は出ない', async ({ page }) => {
   await page.goto('./');
-  await expect(page.locator('body')).toHaveAttribute('data-screen', 'play');
+  await expect(page.locator('body')).toHaveAttribute('data-screen', 'title');
   expect(await page.evaluate(() => typeof window.__llm)).toBe('undefined');
 });
 

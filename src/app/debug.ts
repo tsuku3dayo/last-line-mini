@@ -22,6 +22,8 @@ export function chooseSeed(fixed: number | null): number {
 }
 
 export interface DebugApi {
+  /** タイトルを飛ばして、その場で WAVE 1 から始める（E2E がプレイの場面から始めるため） */
+  start(): void;
   getState(): GameState;
   setState(state: GameState): void;
   /** ループを止める（描画は続く） */

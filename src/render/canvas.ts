@@ -7,7 +7,7 @@ import { groundProfile } from '../core/terrain';
 import { COLORS } from './colors';
 import { textPixels, textWidth } from './font';
 import { hud1pText, hudTopText } from './hud';
-import { overlayTexts, showCursor } from './overlay';
+import { overlayTexts, showCursor, type OverlayText } from './overlay';
 
 const FONT_SCALE = 2;
 const PROFILE = groundProfile();
@@ -142,6 +142,17 @@ function drawCursor(ctx: CanvasRenderingContext2D, x: number, y: number): void {
 }
 
 /** 1 回分を描く。ctx は論理座標（480 × 640）に変換済みであること */
+/**
+ * タイトル・TOP10 の画面（LLM-GUI-0003）。プレイの絵（敵・基地・都市・地面）と照準は描かない。HUD はどの画面でも出す
+ */
+export function renderScreen(ctx: CanvasRenderingContext2D, texts: readonly OverlayText[], view: { score: number; topScore: number }): void {
+  ctx.fillStyle = COLORS.sky;
+  ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  drawText(ctx, hud1pText(view.score), 8, 8, COLORS.hud1p);
+  drawText(ctx, hudTopText(view.topScore), LOGICAL_WIDTH - 8, 8, COLORS.hudTop, FONT_SCALE, 'right');
+  for (const o of texts) drawText(ctx, o.text, LOGICAL_WIDTH / 2, o.y, o.color, o.scale, 'center');
+}
+
 export function render(ctx: CanvasRenderingContext2D, state: GameState, view: { score: number; topScore: number }): void {
   ctx.fillStyle = COLORS.sky;
   ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);

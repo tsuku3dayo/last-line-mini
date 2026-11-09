@@ -19,11 +19,26 @@ export async function presetStorage(page: Page, key: string, value: string): Pro
   );
 }
 
-/** テスト用の入口つきで開き、ループを止める（決まった種で、ステップを自分で進める） */
-export async function openFrozen(page: Page, seed = 1): Promise<void> {
+/**
+ * テスト用の入口つきで開き、ループを止める（決まった種で、ステップを自分で進める）。
+ * 開くとタイトル画面なので（LLM-PBI-0006）、ふつうはタイトルを飛ばして WAVE 1 から始める。title: true ならタイトルのまま
+ */
+export async function openFrozen(page: Page, seed = 1, opts: { title?: boolean } = {}): Promise<void> {
   await page.goto(`./?debug=1&seed=${seed}`);
   await expect(page.locator('body')).toHaveAttribute('data-debug', '1');
   await page.evaluate(() => window.__llm?.freeze());
+  await expect(page.locator('body')).toHaveAttribute('data-screen', 'title');
+  if (opts.title) return;
+  await page.evaluate(() => window.__llm?.start());
+  await expect(page.locator('body')).toHaveAttribute('data-screen', 'play');
+}
+
+/** ゲーム画面の真ん中を、iPhone は触り、PC はスペースキーを押す（触る・押すで次の画面へ） */
+export async function poke(page: Page, isMobile: boolean): Promise<void> {
+  const box = await page.locator('#stage').boundingBox();
+  if (!box) throw new Error('ゲーム画面がない');
+  if (isMobile) await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+  else await page.keyboard.press('Space');
 }
 
 /**

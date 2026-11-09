@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { advance, openFrozen } from './helpers';
+import { advance, openFrozen, poke } from './helpers';
 
 // 1 面の流れ（LLM-PBI-0004）。PC でも iPhone でも確かめる。進み具合は body の data-wave・data-status で読む
 
@@ -37,7 +37,7 @@ test('LLM-TC-0004-04 ?debug=1 のとき、PC の G キーでその場で GAME OV
   await expect(page.locator('body')).toHaveAttribute('data-status', 'gameover');
 });
 
-test('LLM-TC-0004-03 LLM-TC-0004-06 CLEAR で「DEFENSE COMPLETE」、約 1 秒あとに触るか押すと WAVE 1 から', async ({ page, isMobile }) => {
+test('LLM-TC-0004-03 LLM-TC-0004-06 LLM-TC-0006-04 CLEAR で「DEFENSE COMPLETE」、約 1 秒あとに触るか押すと TOP10 → タイトル → WAVE 1', async ({ page, isMobile }) => {
   await openFrozen(page);
   const body = page.locator('body');
   await advance(page, BREAK_STEPS + 1);
@@ -64,10 +64,21 @@ test('LLM-TC-0004-03 LLM-TC-0004-06 CLEAR で「DEFENSE COMPLETE」、約 1 秒�
   await advance(page, 120);
   await expect(body).toHaveAttribute('data-message', `DEFENSE COMPLETE|${breakdown}|TAP OR PRESS ANY KEY`);
   await poke();
+  // LLM-PBI-0006 から：終わりのあとは TOP10 の画面（今回の点を YOUR SCORE で出す）→ タイトル → WAVE 1（GUI-0003 §0）
+  await expect(body).toHaveAttribute('data-screen', 'top10');
+  await expect(body).toHaveAttribute('data-message', /\|YOUR SCORE 000750$/); // 弾 30 × 5 ＋ 都市 6 × 100
+  await poke(); // 出てから約 1 秒は受け付けない
+  await expect(body).toHaveAttribute('data-screen', 'top10');
+  await advance(page, 120);
+  await poke();
+  await expect(body).toHaveAttribute('data-screen', 'title');
+  await advance(page, 120);
+  await poke();
+  await expect(body).toHaveAttribute('data-screen', 'play');
   await expect(body).toHaveAttribute('data-status', 'break');
   await expect(body).toHaveAttribute('data-wave', '1');
   await expect(body).toHaveAttribute('data-message', 'WAVE 1');
-  await expect(body).toHaveAttribute('data-ammo', '10,10,10'); // やり直しの操作で撃っていない
+  await expect(body).toHaveAttribute('data-ammo', '10,10,10'); // 画面を進める操作で撃っていない
 });
 
 test('LLM-TC-0005-01 爆風で敵を壊すと data-score が 25 増え、地面に落ちた敵では増えない', async ({ page }) => {
@@ -132,11 +143,12 @@ test('LLM-TC-0005-04 やり直すと data-score は 0 から', async ({ page, is
     api.setState({ ...s, score: 125, wave: { ...s.wave, status: 'gameover', phaseStep: 0 } });
   });
   await expect(body).toHaveAttribute('data-status', 'gameover');
-  await advance(page, 120);
-  const box = await page.locator('#stage').boundingBox();
-  if (!box) throw new Error('ゲーム画面がない');
-  if (isMobile) await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
-  else await page.keyboard.press('Space');
+  // LLM-PBI-0006 から：終わり → TOP10 → タイトル → WAVE 1 でやり直す（TC-0005 v1.1）
+  for (const next of ['top10', 'title', 'play']) {
+    await advance(page, 120);
+    await poke(page, isMobile);
+    await expect(body).toHaveAttribute('data-screen', next);
+  }
   await expect(body).toHaveAttribute('data-wave', '1');
   await expect(body).toHaveAttribute('data-status', 'break');
   await expect(body).toHaveAttribute('data-score', '0');

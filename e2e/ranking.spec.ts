@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, openFrozen, presetStorage, PREVIEW_RANKING_KEY, PRODUCTION_RANKING_KEY } from './helpers';
+import { advance, openFrozen, poke, presetStorage, PREVIEW_RANKING_KEY, PRODUCTION_RANKING_KEY } from './helpers';
 
 // TOP10 の保存と HUD の TOP（LLM-PBI-0006）。PC でも iPhone でも確かめる
 
@@ -49,4 +49,67 @@ test('LLM-TC-0006-03 保存の中身が壊れていても起動し、TOP10 は�
   await endWithScore(page, 50);
   const saved = JSON.parse((await readKey(page, PREVIEW_RANKING_KEY)) ?? '[]') as { score: number }[];
   expect(saved.map((r) => r.score)).toEqual([50]);
+});
+
+const rowsOf = async (page: Page) => ((await page.locator('body').getAttribute('data-message')) ?? '').split('|');
+
+test('LLM-TC-0006-01 開くとタイトル画面：題字と TOP10 の 10 行。約 1 秒たってから触るか押すと WAVE 1 から', async ({ page, isMobile }) => {
+  await presetStorage(page, PREVIEW_RANKING_KEY, JSON.stringify([record(12345), record(9870, 'B.C')]));
+  await openFrozen(page, 1, { title: true });
+  const body = page.locator('body');
+  const rows = await rowsOf(page);
+  expect(rows.slice(0, 12)).toEqual([
+    'LAST LINE MINI',
+    'TOP 10',
+    ' 1  AAA  012345',
+    ' 2  B.C  009870',
+    ...Array.from({ length: 8 }, (_, i) => `${String(i + 3).padStart(2)}  ---  000000`),
+  ]);
+  await poke(page, isMobile); // 出てから約 1 秒は受け付けない
+  await expect(body).toHaveAttribute('data-screen', 'title');
+  await advance(page, 120);
+  await expect(body).toHaveAttribute('data-message', /\|TAP OR PRESS ANY KEY$/);
+  await poke(page, isMobile);
+  await expect(body).toHaveAttribute('data-screen', 'play');
+  await expect(body).toHaveAttribute('data-wave', '1');
+  await expect(body).toHaveAttribute('data-status', 'break');
+  await expect(body).toHaveAttribute('data-ammo', '10,10,10'); // 始める操作で撃っていない
+});
+
+test('LLM-TC-0006-04 LLM-TC-0006-06 ランクインした点が TOP10 の画面に入り、開き直しても残る', async ({ page, isMobile }) => {
+  await presetStorage(page, PREVIEW_RANKING_KEY, JSON.stringify([record(900), record(100, 'LOW')]));
+  await openFrozen(page);
+  await advance(page, 1);
+  await endWithScore(page, 500);
+  await advance(page, 120);
+  await poke(page, isMobile);
+  await expect(page.locator('body')).toHaveAttribute('data-screen', 'top10');
+  const rows = await rowsOf(page);
+  expect(rows.slice(0, 4)).toEqual(['TOP 10', ' 1  AAA  000900', ' 2  ...  000500', ' 3  LOW  000100']);
+  expect(rows).toContain('YOUR SCORE 000500');
+
+  // 開き直すと、タイトルの TOP10 に残っている（保存の中身は置き直さない）
+  await page.reload();
+  await expect(page.locator('body')).toHaveAttribute('data-screen', 'title');
+  expect((await rowsOf(page)).slice(2, 5)).toEqual([' 1  AAA  000900', ' 2  ...  000500', ' 3  LOW  000100']);
+  await expect(page.locator('body')).toHaveAttribute('data-top', '900');
+});
+
+test('LLM-TC-0006-04 ランクインしなくても TOP10 の画面に今回の点が出る。触るか押すとタイトル', async ({ page, isMobile }) => {
+  const ten = Array.from({ length: 10 }, (_, i) => record(1000 - i * 10, `P${i}`));
+  await presetStorage(page, PREVIEW_RANKING_KEY, JSON.stringify(ten));
+  await openFrozen(page);
+  await advance(page, 1);
+  await endWithScore(page, 910); // 10 位（910）と同じ点は入らない
+  await advance(page, 120);
+  await poke(page, isMobile);
+  const body = page.locator('body');
+  await expect(body).toHaveAttribute('data-screen', 'top10');
+  const rows = await rowsOf(page);
+  expect(rows[10]).toBe('10  P9   000910');
+  expect(rows).toContain('YOUR SCORE 000910');
+  expect(rows.filter((r) => r.includes('...'))).toEqual([]); // 入っていない
+  await advance(page, 120);
+  await poke(page, isMobile);
+  await expect(body).toHaveAttribute('data-screen', 'title');
 });
