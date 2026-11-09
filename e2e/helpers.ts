@@ -1,5 +1,24 @@
 import { expect, type Page } from '@playwright/test';
 
+/** プレビューの TOP10 の保存のキー（LLM-SA-0001 §2。E2E はプレビューの build を開く） */
+export const PREVIEW_RANKING_KEY = 'last-line-mini-preview-ranking';
+export const PRODUCTION_RANKING_KEY = 'last-line-mini-ranking';
+
+/**
+ * ページが開く前に、保存の中身を置く（LLM-PBI-0006）。value は文字列のまま置く（壊れた中身も試せるように）。
+ * 最初の 1 回だけ置く（開き直しで残るかを確かめるテストで、置き直さないように）
+ */
+export async function presetStorage(page: Page, key: string, value: string): Promise<void> {
+  await page.addInitScript(
+    ([k, v]) => {
+      if (sessionStorage.getItem('__preset') === '1') return;
+      sessionStorage.setItem('__preset', '1');
+      localStorage.setItem(k, v);
+    },
+    [key, value] as const,
+  );
+}
+
 /** テスト用の入口つきで開き、ループを止める（決まった種で、ステップを自分で進める） */
 export async function openFrozen(page: Page, seed = 1): Promise<void> {
   await page.goto(`./?debug=1&seed=${seed}`);
