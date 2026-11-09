@@ -10,11 +10,12 @@ import { formatVersion } from './app/version';
 import { createGame, forceGameOver, step, type GameState, type StepInput } from './core/game';
 import { insertRecord, topScore, type RankRecord } from './core/ranking';
 import { isOver } from './core/wave';
-import { render } from './render/canvas';
+import { render, renderScreen } from './render/canvas';
 import { canRestart, overlayTexts } from './render/overlay';
+import { canLeaveScreen, titleTexts, top10Texts, type Screen } from './render/screens';
 import { loadRanking, rankingKey, saveRanking, type KeyValueStorage } from './storage/ranking-store';
 
-// 組み立て（ここだけが全部の層を知る）。タイトル画面は LLM-PBI-0006 で足すので、今は開くとすぐプレイが始まる
+// 組み立て（ここだけが全部の層を知る）。画面の流れ：タイトル → プレイ → 終わり → TOP10 → タイトル（LLM-GUI-0003 §0）
 const versionText = formatVersion(__APP_VERSION__, __APP_CHANNEL__, __APP_COMMIT__);
 const body = document.body;
 body.dataset.version = versionText;
@@ -66,48 +67,82 @@ const recordIfOver = () => {
   saveRanking(store, rankingStoreKey, ranking);
 };
 
-// 入力を渡さなければ、キーボード・マウスから読む
+/** 今の画面と、その画面が出てからのステップ数（タイトル・TOP10 の点滅と、約 1 秒の受け付けない時間に使う） */
+let screen: Screen = 'title';
+let screenStep = 0;
+
+/** 画面を切り替える。前の画面の操作が次の画面の 1 発にならないよう、たまった入力は捨てる */
+const goTo = (next: Screen) => {
+  screen = next;
+  screenStep = 0;
+  input.read();
+  body.dataset.screen = next;
+};
+
+/** タイトルから WAVE 1 を始める。新しい乱数の種で（`?debug=1&seed=` のときは同じ種） */
+const startGame = () => {
+  state = createGame(chooseSeed(fixedSeed));
+  recorded = false;
+  goTo('play');
+};
+
+// プレイ中はゲームを進める（入力を渡さなければ、キーボード・マウスから読む）。ほかの画面では画面の時間だけ進め、入力は捨てる
 const advanceBy = (steps: number, given?: StepInput) => {
-  for (let i = 0; i < steps; i++) state = step(state, given ?? input.read());
+  if (screen === 'play') {
+    for (let i = 0; i < steps; i++) state = step(state, given ?? input.read());
+  } else {
+    screenStep += steps;
+    input.read();
+  }
   return state;
 };
+
+const screenTexts = () => (screen === 'title' ? titleTexts(ranking, screenStep) : top10Texts(ranking, state.score, screenStep));
 
 const draw = () => {
   ctx.setTransform(transform.scale * transform.dpr, 0, 0, transform.scale * transform.dpr, 0, 0);
   ctx.imageSmoothingEnabled = false;
   recordIfOver();
-  // TOP は TOP10 の 1 位の点（LLM-PBI-0006）
-  render(ctx, state, { score: state.score, topScore: topScore(ranking) });
-  // E2E が読む状態（テンプレート §5.4）
-  body.dataset.step = String(state.step);
+  // TOP は TOP10 の 1 位の点（LLM-PBI-0006）。1P はプレイ中の点（タイトル・TOP10 では前のプレイの点）
+  const view = { score: state.score, topScore: topScore(ranking) };
+  const messages = screen === 'play' ? overlayTexts(state.wave, state.bonus) : screenTexts();
+  if (screen === 'play') render(ctx, state, view);
+  else renderScreen(ctx, messages, view);
+  // E2E が読む状態（テンプレート §5.4）。step はプレイ中はゲームの、ほかの画面では画面のステップ数
+  body.dataset.step = String(screen === 'play' ? state.step : screenStep);
   body.dataset.ammo = state.bases.map((b) => b.ammo).join(',');
   body.dataset.wave = String(state.wave.number);
   body.dataset.status = state.wave.status;
   body.dataset.score = String(state.score);
   body.dataset.top = String(topScore(ranking));
-  body.dataset.message = overlayTexts(state.wave, state.bonus)
-    .map((o) => o.text)
-    .join('|');
+  body.dataset.message = messages.map((o) => o.text).join('|');
 };
 
 /**
- * やり直し（LLM-TC-0004-06）：終わってから約 1 秒たっていれば、キー・タッチ・クリックで WAVE 1 から。
- * 新しい乱数の種で始める（`?debug=1&seed=` のときは同じ種）。やり直しの操作が新しいゲームの 1 発にならないよう、たまった入力は捨てる
+ * 触る・押す（LLM-GUI-0003 §0）。どの画面も出てから約 1 秒は受け付けない。
+ * 終わりの画面 → TOP10（LLM-TC-0006-04。LLM-PBI-0005 までは WAVE 1 からだった）→ タイトル → WAVE 1
  */
-const restartIfReady = (): boolean => {
-  if (!canRestart(state.wave)) return false;
-  state = createGame(chooseSeed(fixedSeed));
-  recorded = false;
-  input.read();
+const poke = (): boolean => {
+  if (screen === 'play') {
+    if (!canRestart(state.wave)) return false;
+    recordIfOver();
+    goTo('top10');
+  } else if (!canLeaveScreen(screenStep)) {
+    return false;
+  } else if (screen === 'top10') {
+    goTo('title');
+  } else {
+    startGame();
+  }
   draw();
   return true;
 };
-window.addEventListener('pointerdown', () => restartIfReady());
+window.addEventListener('pointerdown', () => poke());
 window.addEventListener('keydown', (e) => {
   if (e.target instanceof HTMLInputElement) return;
-  if (restartIfReady()) return;
+  if (poke()) return;
   // 実機確認用：G キーでその場で GAME OVER にする（`?debug=1` のときだけ。PO の決定、スプリント 04）
-  if (debug && e.code === 'KeyG' && !isOver(state.wave.status)) {
+  if (debug && screen === 'play' && e.code === 'KeyG' && !isOver(state.wave.status)) {
     state = forceGameOver(state);
     draw();
   }
@@ -119,11 +154,15 @@ watchLayout(stage, canvas, (layout, dpr) => {
   draw();
 });
 
+goTo('title');
 const loop = startLoop((steps) => advanceBy(steps), draw);
-body.dataset.screen = 'play';
 
 if (debug) {
   exposeDebugApi({
+    start: () => {
+      startGame();
+      draw();
+    },
     getState: () => state,
     setState: (next) => {
       state = next;
