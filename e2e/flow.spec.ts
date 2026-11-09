@@ -50,7 +50,9 @@ test('LLM-TC-0004-03 LLM-TC-0004-06 CLEAR で「DEFENSE COMPLETE」、約 1 秒�
   });
   await advance(page, 1);
   await expect(body).toHaveAttribute('data-status', 'clear');
-  await expect(body).toHaveAttribute('data-message', 'DEFENSE COMPLETE');
+  // 終わりの画面にはボーナスの内訳 2 行も出る（LLM-PBI-0005 で足した。弾は 30 発・都市 6 つのまま）
+  const breakdown = 'MISSILES 30 X 5    150|CITIES    6 X 100  600';
+  await expect(body).toHaveAttribute('data-message', `DEFENSE COMPLETE|${breakdown}`);
 
   const box = await page.locator('#stage').boundingBox();
   if (!box) throw new Error('ゲーム画面がない');
@@ -60,7 +62,7 @@ test('LLM-TC-0004-03 LLM-TC-0004-06 CLEAR で「DEFENSE COMPLETE」、約 1 秒�
   await poke(); // 約 1 秒たつ前は受け付けない
   await expect(body).toHaveAttribute('data-status', 'clear');
   await advance(page, 120);
-  await expect(body).toHaveAttribute('data-message', 'DEFENSE COMPLETE|TAP OR PRESS ANY KEY');
+  await expect(body).toHaveAttribute('data-message', `DEFENSE COMPLETE|${breakdown}|TAP OR PRESS ANY KEY`);
   await poke();
   await expect(body).toHaveAttribute('data-status', 'break');
   await expect(body).toHaveAttribute('data-wave', '1');
@@ -89,6 +91,35 @@ test('LLM-TC-0005-01 爆風で敵を壊すと data-score が 25 増え、地面�
   await advance(page, 1);
   expect(await page.evaluate(() => window.__llm?.getState().enemies.length)).toBe(0); // 前提：2 つとも消えた
   await expect(body).toHaveAttribute('data-score', '25');
+});
+
+test('LLM-TC-0005-02 LLM-TC-0005-03 CLEAR の瞬間に残弾 × 5 と都市 × 100 が足され、内訳 2 行が出る', async ({ page }) => {
+  await openFrozen(page);
+  const body = page.locator('body');
+  await advance(page, BREAK_STEPS + 1);
+  // 最後のウェーブを出し終えた。基地 A 3 発・B 壊れた・C 9 発、都市 4 つ、点 300
+  await page.evaluate(() => {
+    const api = window.__llm;
+    if (!api) throw new Error('テスト用の入口がない');
+    const s = api.getState();
+    api.setState({
+      ...s,
+      enemies: [],
+      wave: { number: 4, status: 'playing', phaseStep: 999, spawned: 15 },
+      bases: [
+        { x: 40, ammo: 3, alive: true },
+        { x: 240, ammo: 0, alive: false },
+        { x: 440, ammo: 9, alive: true },
+      ],
+      cities: s.cities.map((c, i) => ({ ...c, alive: i < 4 })),
+      score: 300,
+    });
+  });
+  await expect(body).toHaveAttribute('data-score', '300'); // 前提
+  await advance(page, 1);
+  await expect(body).toHaveAttribute('data-status', 'clear');
+  await expect(body).toHaveAttribute('data-score', '760');
+  await expect(body).toHaveAttribute('data-message', 'DEFENSE COMPLETE|MISSILES 12 X 5     60|CITIES    4 X 100  400');
 });
 
 test('LLM-TC-0005-04 やり直すと data-score は 0 から', async ({ page, isMobile }) => {

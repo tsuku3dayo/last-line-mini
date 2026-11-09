@@ -28,7 +28,8 @@ export const CURSOR_MAX_X = LOGICAL_WIDTH - 4;
 export const CURSOR_MIN_Y = 32;
 export const CURSOR_MAX_Y = 556;
 
-export const INITIAL_CURSOR: Cursor = { x: LOGICAL_WIDTH / 2, y: 300, vx: 0, vy: 0 };
+/** 始めの位置（LLM-GUI-0001 v1.5 §5）：「WAVE 1」の文字（y 280〜308）と重ならないよう、y 420 */
+export const INITIAL_CURSOR: Cursor = { x: LOGICAL_WIDTH / 2, y: 420, vx: 0, vy: 0 };
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
