@@ -14,7 +14,6 @@ import { render, renderScreen } from './render/canvas';
 import { canRestart, overlayTexts } from './render/overlay';
 import { canLeaveScreen, nameTexts, titleTexts, top10Texts, type Screen } from './render/screens';
 import { createNameEntry } from './app/name-entry';
-import { diag, startDiag } from './app/diag';
 import { EMPTY_NAME, finalName } from './core/name';
 import { loadRanking, rankingKey, saveRanking, type KeyValueStorage } from './storage/ranking-store';
 
@@ -103,7 +102,6 @@ const goTo = (next: Screen) => {
   screenStep = 0;
   input.read();
   body.dataset.screen = next;
-  diag(`画面 → ${next}${next === 'name' ? `（順位 ${lastRank}）` : ''}`);
   // 名前の入力欄は、名前の画面のときだけ出す。触った操作の中で出すので、iPhone でもキーボードが出る
   if (next === 'name') nameEntry.show();
   else nameEntry.hide();
@@ -201,6 +199,10 @@ if (debug) {
       startGame();
       draw();
     },
+    title: () => {
+      goTo('title');
+      draw();
+    },
     getState: () => state,
     setState: (next) => {
       state = next;
@@ -216,7 +218,6 @@ if (debug) {
   });
   body.dataset.debug = '1';
   showFps(stage);
-  startDiag(stage, () => screen);
 }
 
 setupPwa();

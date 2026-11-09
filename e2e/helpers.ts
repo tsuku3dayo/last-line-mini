@@ -28,7 +28,12 @@ export async function openFrozen(page: Page, seed = 1, opts: { title?: boolean }
   await expect(page.locator('body')).toHaveAttribute('data-debug', '1');
   await page.evaluate(() => window.__llm?.freeze());
   await expect(page.locator('body')).toHaveAttribute('data-screen', 'title');
-  if (opts.title) return;
+  if (opts.title) {
+    // 開いてから止めるまでに進んだタイトルの時間を 0 に戻す（点滅・約 1 秒の受け付けない時間を、毎回同じ所から数える。LLM-TASK-0031）
+    await page.evaluate(() => window.__llm?.title());
+    await expect(page.locator('body')).toHaveAttribute('data-step', '0');
+    return;
+  }
   await page.evaluate(() => window.__llm?.start());
   await expect(page.locator('body')).toHaveAttribute('data-screen', 'play');
 }
