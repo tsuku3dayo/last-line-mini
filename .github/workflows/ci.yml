@@ -5,12 +5,35 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  # 文書だけ（docs/ の下と .md）の PR かを見る（LLM-TASK-0025、スプリント 05 のレトロの案 6）。
+  # e2e・production-build は必須のチェックなので、ワークフローごと止めずにジョブを飛ばす（飛ばしたジョブは合格と同じ扱い）。
+  # verify は文書の整合性チェック（check:docs）を含むので、文書だけでも動かす。
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - id: diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          files=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" --paginate --jq '.[].filename')
+          echo "$files"
+          # 文書でないファイルが 1 つでもあれば code=true（一覧が取れなかったときも true にして、テストを飛ばさない）
+          if [ -n "$files" ] && ! echo "$files" | grep -qvE '^docs/|\.md$'; then
+            echo "code=false" >> "$GITHUB_OUTPUT"
+            echo "文書だけの PR：e2e・production-build を飛ばす"
+          else
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          fi
+
   verify:
     runs-on: ubuntu-latest
     steps:
@@ -22,6 +45,8 @@ jobs:
 
   production-build:
     # 本番用の build が通り、本番の決まり（名前・base・SW がプレビューを扱わない）を満たすか
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -33,6 +58,8 @@ jobs:
       - run: node scripts/check-dist.mjs --channel production
 
   e2e:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     # @playwright/test と同じ版のコンテナ（package.json の版とそろえる）
     container: { image: mcr.microsoft.com/playwright:v1.64.1-noble }

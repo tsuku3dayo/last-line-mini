@@ -3,10 +3,13 @@ name: Pages
 # main へのマージ → プレビュー（/preview/）を新しくする
 # リリースのタグ v* → 本番（/）を新しくする
 # どちらのときも、本番（最新のタグ）とプレビュー（main）をまとめて 1 つの公開物にする（LLM-ADR-0001）
+# 文書だけ（docs/ の下と .md）のマージでは動かさない（プレビューの中身が変わらないため。LLM-TASK-0025）。
+# タグの push にはこの絞り込みは効かない（リリースはいつも動く）
 on:
   push:
     branches: [main]
     tags: ['v*']
+    paths-ignore: ['docs/**', '**/*.md']
   workflow_dispatch:
 
 permissions:
