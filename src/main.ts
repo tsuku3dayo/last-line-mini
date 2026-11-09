@@ -42,12 +42,14 @@ const advanceBy = (steps: number, given?: StepInput) => {
 const draw = () => {
   ctx.setTransform(transform.scale * transform.dpr, 0, 0, transform.scale * transform.dpr, 0, 0);
   ctx.imageSmoothingEnabled = false;
-  render(ctx, state, { score: 0, topScore: 0 });
+  // TOP は LLM-PBI-0006 まで 0 のまま（LLM-PBI-0005 の PO の決定）
+  render(ctx, state, { score: state.score, topScore: 0 });
   // E2E が読む状態（テンプレート §5.4）
   body.dataset.step = String(state.step);
   body.dataset.ammo = state.bases.map((b) => b.ammo).join(',');
   body.dataset.wave = String(state.wave.number);
   body.dataset.status = state.wave.status;
+  body.dataset.score = String(state.score);
   body.dataset.message = overlayTexts(state.wave)
     .map((o) => o.text)
     .join('|');

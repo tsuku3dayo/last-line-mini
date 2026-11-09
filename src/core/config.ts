@@ -17,6 +17,9 @@ export const WAVE_ENEMY_COUNTS = [6, 9, 12, 15] as const;
 /** ウェーブのあいだ（「WAVE n」を出す時間）。始めの WAVE 1 の前にもある */
 export const WAVE_BREAK_STEPS = 3 * STEPS_PER_SECOND;
 
+/** 敵（アタックミサイル）を 1 つ壊したときの点。迎撃でも誘爆でも同じ（仕様書 §4.1・LLM-PBI-0005） */
+export const SCORE_PER_ENEMY = 25;
+
 /** 都市 1〜6 の x */
 export const CITY_XS = [100, 140, 180, 300, 340, 380] as const;
 
