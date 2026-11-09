@@ -1,5 +1,5 @@
 import { stepBlasts, type Blast } from './blast';
-import { AMMO_PER_BASE, BASE_XS, CITY_XS } from './config';
+import { AMMO_PER_BASE, BASE_XS, CITY_XS, SCORE_PER_ENEMY } from './config';
 import { applyLandings } from './damage';
 import { allCitiesLost, cannotStop } from './end';
 import { INITIAL_CURSOR, stepCursor, type Cursor, type MoveDir } from './cursor';
@@ -39,6 +39,8 @@ export interface GameState {
   readonly impacts: readonly Impact[];
   /** ウェーブの進み具合（LLM-PBI-0004） */
   readonly wave: WaveProgress;
+  /** 今の点数（LLM-PBI-0005）。やり直しは新しいゲームなので 0 から */
+  readonly score: number;
 }
 
 /** 3 つの基地の発射ボタン（A・B・C）。押した瞬間だけ true */
@@ -73,6 +75,7 @@ export function createGame(seed: number): GameState {
     enemies: [],
     impacts: [],
     wave: INITIAL_WAVE,
+    score: 0,
   };
 }
 
@@ -150,6 +153,8 @@ export function step(state: GameState, input: StepInput): GameState {
     enemies: enemies.flying,
     impacts: [...stepImpacts(state.impacts), ...landedAt],
     wave: endStep(begun.wave, spawned.enemy !== null, enemies.flying.length),
+    // 点（LLM-PBI-0005）：爆風で壊れた敵 1 つにつき 25 点。迎撃・誘爆どちらの爆風でも destroyed に入る。地面に着いた敵（landed）は 0 点
+    score: state.score + SCORE_PER_ENEMY * enemies.destroyed.length,
   };
   return judgeEnd(next);
 }

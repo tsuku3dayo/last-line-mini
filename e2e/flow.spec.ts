@@ -68,6 +68,49 @@ test('LLM-TC-0004-03 LLM-TC-0004-06 CLEAR で「DEFENSE COMPLETE」、約 1 秒�
   await expect(body).toHaveAttribute('data-ammo', '10,10,10'); // やり直しの操作で撃っていない
 });
 
+test('LLM-TC-0005-01 爆風で敵を壊すと data-score が 25 増え、地面に落ちた敵では増えない', async ({ page }) => {
+  await openFrozen(page);
+  const body = page.locator('body');
+  await expect(body).toHaveAttribute('data-score', '0');
+  // 敵が出る前（WAVE 1 のあいだ）に、広がりきった爆風の中の敵と、何もない所（x=60）に落ちる直前の敵を置く
+  await page.evaluate(() => {
+    const api = window.__llm;
+    if (!api) throw new Error('テスト用の入口がない');
+    const s = api.getState();
+    api.setState({
+      ...s,
+      blasts: [{ x: 200, y: 300, age: 48 }], // BLAST_GROW_STEPS（0.4 秒 × 120）で広がりきった爆風
+      enemies: [
+        { fromX: 200, fromY: 0, toX: 200, toY: 592, speed: 0.001, traveled: 300 },
+        { fromX: 60, fromY: 0, toX: 60, toY: 592, speed: 1, traveled: 591.5 },
+      ],
+    });
+  });
+  await advance(page, 1);
+  expect(await page.evaluate(() => window.__llm?.getState().enemies.length)).toBe(0); // 前提：2 つとも消えた
+  await expect(body).toHaveAttribute('data-score', '25');
+});
+
+test('LLM-TC-0005-04 やり直すと data-score は 0 から', async ({ page, isMobile }) => {
+  await openFrozen(page);
+  const body = page.locator('body');
+  await page.evaluate(() => {
+    const api = window.__llm;
+    if (!api) throw new Error('テスト用の入口がない');
+    const s = api.getState();
+    api.setState({ ...s, score: 125, wave: { ...s.wave, status: 'gameover', phaseStep: 0 } });
+  });
+  await expect(body).toHaveAttribute('data-status', 'gameover');
+  await advance(page, 120);
+  const box = await page.locator('#stage').boundingBox();
+  if (!box) throw new Error('ゲーム画面がない');
+  if (isMobile) await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+  else await page.keyboard.press('Space');
+  await expect(body).toHaveAttribute('data-wave', '1');
+  await expect(body).toHaveAttribute('data-status', 'break');
+  await expect(body).toHaveAttribute('data-score', '0');
+});
+
 test('LLM-TC-0004-02 WAVE 1 のあいだ → WAVE 1 → 敵がいなくなると WAVE 2 のあいだ → 弾が 10 発に戻って WAVE 2', async ({ page }) => {
   await openFrozen(page);
   const body = page.locator('body');
