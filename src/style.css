@@ -58,6 +58,44 @@ body {
   pointer-events: none;
 }
 
+/* 名前の入力（LLM-GUI-0003 §3）。位置と大きさは src/app/name-entry.ts が割合で決める */
+#name-entry[hidden] {
+  display: none;
+}
+
+#name-input,
+#name-ok {
+  position: absolute;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 2px solid #6cff8a;
+  border-radius: 0;
+  background: #05070f;
+  color: #e0e0e0;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  text-align: center;
+  letter-spacing: 0.3em;
+  /* 字間は最後の文字のうしろにも付くので、左にも同じだけあけて真ん中にそろえる */
+  padding-left: 0.3em;
+  text-transform: uppercase;
+  user-select: text;
+  -webkit-user-select: text;
+  touch-action: manipulation;
+}
+
+#name-input {
+  cursor: text;
+  outline: none;
+}
+
+#name-ok {
+  cursor: pointer;
+  color: #6cff8a;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 /* 版：ゲーム画面の右下の隅（LLM-GUI-0001 §1） */
 #app-version {
   position: absolute;

@@ -12,7 +12,9 @@ import { insertRecord, topScore, type RankRecord } from './core/ranking';
 import { isOver } from './core/wave';
 import { render, renderScreen } from './render/canvas';
 import { canRestart, overlayTexts } from './render/overlay';
-import { canLeaveScreen, titleTexts, top10Texts, type Screen } from './render/screens';
+import { canLeaveScreen, nameTexts, titleTexts, top10Texts, type Screen } from './render/screens';
+import { createNameEntry } from './app/name-entry';
+import { EMPTY_NAME, finalName } from './core/name';
 import { loadRanking, rankingKey, saveRanking, type KeyValueStorage } from './storage/ranking-store';
 
 // 組み立て（ここだけが全部の層を知る）。画面の流れ：タイトル → プレイ → 終わり → TOP10 → タイトル（LLM-GUI-0003 §0）
@@ -49,19 +51,25 @@ const rankingStoreKey = rankingKey(__APP_CHANNEL__);
 let ranking: readonly RankRecord[] = loadRanking(store, rankingStoreKey);
 /** このプレイの記録をもう TOP10 に入れたか（終わった瞬間に 1 回だけ） */
 let recorded = false;
+/** このプレイがランクインした順位（入らなければ null）。名前の入力と TOP10 の点滅に使う（LLM-PBI-0007） */
+let lastRank: number | null = null;
 
-/** 終わったら（CLEAR・GAME OVER）、点を TOP10 に入れて保存する。名前は LLM-PBI-0007 まで `...` */
+/**
+ * 終わったら（CLEAR・GAME OVER）、点を TOP10 に入れて保存する。名前はまず `...` で入れ、
+ * 名前を確定したら書き換える（名前の入力の途中で閉じても、記録は `...` で残る）
+ */
 const recordIfOver = () => {
   if (recorded || !isOver(state.wave.status)) return;
   recorded = true;
   const result = insertRecord(ranking, {
-    name: '...',
+    name: EMPTY_NAME,
     score: state.score,
     cities: state.bonus?.cities ?? state.cities.filter((c) => c.alive).length,
     missiles: state.bonus?.missiles ?? 0,
     status: state.wave.status === 'clear' ? 'CLEARED' : 'GAME_OVER',
     createdAt: new Date().toISOString(),
   });
+  lastRank = result.rank;
   if (result.rank === null) return;
   ranking = result.list;
   saveRanking(store, rankingStoreKey, ranking);
@@ -71,18 +79,34 @@ const recordIfOver = () => {
 let screen: Screen = 'title';
 let screenStep = 0;
 
+/** 名前を確定したら：ランクインした行の名前を書き換えて保存し、TOP10 の画面へ（LLM-TC-0007-03） */
+const confirmName = (raw: string) => {
+  if (screen !== 'name' || lastRank === null) return;
+  const index = lastRank - 1;
+  const name = finalName(raw);
+  ranking = ranking.map((r, i) => (i === index ? { ...r, name } : r));
+  saveRanking(store, rankingStoreKey, ranking);
+  goTo('top10');
+  draw();
+};
+const nameEntry = createNameEntry(stage, (raw) => confirmName(raw));
+
 /** 画面を切り替える。前の画面の操作が次の画面の 1 発にならないよう、たまった入力は捨てる */
 const goTo = (next: Screen) => {
   screen = next;
   screenStep = 0;
   input.read();
   body.dataset.screen = next;
+  // 名前の入力欄は、名前の画面のときだけ出す。触った操作の中で出すので、iPhone でもキーボードが出る
+  if (next === 'name') nameEntry.show();
+  else nameEntry.hide();
 };
 
 /** タイトルから WAVE 1 を始める。新しい乱数の種で（`?debug=1&seed=` のときは同じ種） */
 const startGame = () => {
   state = createGame(chooseSeed(fixedSeed));
   recorded = false;
+  lastRank = null;
   goTo('play');
 };
 
@@ -97,7 +121,11 @@ const advanceBy = (steps: number, given?: StepInput) => {
   return state;
 };
 
-const screenTexts = () => (screen === 'title' ? titleTexts(ranking, screenStep) : top10Texts(ranking, state.score, screenStep));
+const screenTexts = () => {
+  if (screen === 'title') return titleTexts(ranking, screenStep);
+  if (screen === 'name') return nameTexts(lastRank ?? 0, state.score);
+  return top10Texts(ranking, state.score, screenStep, lastRank);
+};
 
 const draw = () => {
   ctx.setTransform(transform.scale * transform.dpr, 0, 0, transform.scale * transform.dpr, 0, 0);
@@ -120,13 +148,15 @@ const draw = () => {
 
 /**
  * 触る・押す（LLM-GUI-0003 §0）。どの画面も出てから約 1 秒は受け付けない。
- * 終わりの画面 → TOP10（LLM-TC-0006-04。LLM-PBI-0005 までは WAVE 1 からだった）→ タイトル → WAVE 1
+ * 終わりの画面 →（ランクインしたら名前の入力）→ TOP10 → タイトル → WAVE 1。
+ * 名前の画面では何もしない（確定は Enter・OK だけ。入力欄の外を触ってもキーボードが閉じるだけ）
  */
 const poke = (): boolean => {
+  if (screen === 'name') return false;
   if (screen === 'play') {
     if (!canRestart(state.wave)) return false;
     recordIfOver();
-    goTo('top10');
+    goTo(lastRank !== null ? 'name' : 'top10');
   } else if (!canLeaveScreen(screenStep)) {
     return false;
   } else if (screen === 'top10') {
@@ -151,6 +181,7 @@ window.addEventListener('keydown', (e) => {
 watchLayout(stage, canvas, (layout, dpr) => {
   transform = { scale: layout.scale, dpr };
   body.dataset.scale = layout.scale.toFixed(4);
+  nameEntry.setScale(layout.scale);
   draw();
 });
 

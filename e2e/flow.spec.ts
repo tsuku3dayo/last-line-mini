@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { advance, openFrozen, poke } from './helpers';
+import { advance, confirmName, openFrozen, poke } from './helpers';
 
 // 1 面の流れ（LLM-PBI-0004）。PC でも iPhone でも確かめる。進み具合は body の data-wave・data-status で読む
 
@@ -65,7 +65,8 @@ test('LLM-TC-0004-03 LLM-TC-0004-06 LLM-TC-0006-04 CLEAR で「DEFENSE COMPLETE�
   await expect(body).toHaveAttribute('data-message', `DEFENSE COMPLETE|${breakdown}|TAP OR PRESS ANY KEY`);
   await poke();
   // LLM-PBI-0006 から：終わりのあとは TOP10 の画面（今回の点を YOUR SCORE で出す）→ タイトル → WAVE 1（GUI-0003 §0）
-  await expect(body).toHaveAttribute('data-screen', 'top10');
+  // LLM-PBI-0007 から：TOP10 が空なのでランクインし、先に名前の入力（空のまま確定）
+  await confirmName(page, isMobile);
   await expect(body).toHaveAttribute('data-message', /\|YOUR SCORE 000750$/); // 弾 30 × 5 ＋ 都市 6 × 100
   await poke(); // 出てから約 1 秒は受け付けない
   await expect(body).toHaveAttribute('data-screen', 'top10');
@@ -143,8 +144,12 @@ test('LLM-TC-0005-04 やり直すと data-score は 0 から', async ({ page, is
     api.setState({ ...s, score: 125, wave: { ...s.wave, status: 'gameover', phaseStep: 0 } });
   });
   await expect(body).toHaveAttribute('data-status', 'gameover');
-  // LLM-PBI-0006 から：終わり → TOP10 → タイトル → WAVE 1 でやり直す（TC-0005 v1.1）
-  for (const next of ['top10', 'title', 'play']) {
+  // LLM-PBI-0006 から：終わり → TOP10 → タイトル → WAVE 1 でやり直す（TC-0005 v1.1）。
+  // LLM-PBI-0007 から：TOP10 が空なのでランクインし、先に名前の入力（空のまま確定）
+  await advance(page, 120);
+  await poke(page, isMobile);
+  await confirmName(page, isMobile);
+  for (const next of ['title', 'play']) {
     await advance(page, 120);
     await poke(page, isMobile);
     await expect(body).toHaveAttribute('data-screen', next);

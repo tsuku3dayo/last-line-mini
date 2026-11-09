@@ -33,6 +33,18 @@ export async function openFrozen(page: Page, seed = 1, opts: { title?: boolean }
   await expect(page.locator('body')).toHaveAttribute('data-screen', 'play');
 }
 
+/**
+ * 名前の画面で、名前を打って確定する（LLM-PBI-0007）。PC は Enter、iPhone は OK を触る。
+ * 確定すると TOP10 の画面になる
+ */
+export async function confirmName(page: Page, isMobile: boolean, text = ''): Promise<void> {
+  await expect(page.locator('body')).toHaveAttribute('data-screen', 'name');
+  if (text) await page.locator('#name-input').pressSequentially(text);
+  if (isMobile) await page.locator('#name-ok').tap();
+  else await page.keyboard.press('Enter');
+  await expect(page.locator('body')).toHaveAttribute('data-screen', 'top10');
+}
+
 /** ゲーム画面の真ん中を、iPhone は触り、PC はスペースキーを押す（触る・押すで次の画面へ） */
 export async function poke(page: Page, isMobile: boolean): Promise<void> {
   const box = await page.locator('#stage').boundingBox();
