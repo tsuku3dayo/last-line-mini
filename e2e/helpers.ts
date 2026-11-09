@@ -40,6 +40,8 @@ export async function openFrozen(page: Page, seed = 1, opts: { title?: boolean }
 export async function confirmName(page: Page, isMobile: boolean, text = ''): Promise<void> {
   await expect(page.locator('body')).toHaveAttribute('data-screen', 'name');
   if (text) await page.locator('#name-input').pressSequentially(text);
+  // 確定は、名前の画面が出てから約 1 秒たってから（GUI-0003 §0。LLM-TASK-0030）
+  await advance(page, 120);
   if (isMobile) await page.locator('#name-ok').tap();
   else await page.keyboard.press('Enter');
   await expect(page.locator('body')).toHaveAttribute('data-screen', 'top10');

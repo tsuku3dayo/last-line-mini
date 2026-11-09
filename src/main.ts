@@ -14,6 +14,7 @@ import { render, renderScreen } from './render/canvas';
 import { canRestart, overlayTexts } from './render/overlay';
 import { canLeaveScreen, nameTexts, titleTexts, top10Texts, type Screen } from './render/screens';
 import { createNameEntry } from './app/name-entry';
+import { diag, startDiag } from './app/diag';
 import { EMPTY_NAME, finalName } from './core/name';
 import { loadRanking, rankingKey, saveRanking, type KeyValueStorage } from './storage/ranking-store';
 
@@ -89,7 +90,12 @@ const confirmName = (raw: string) => {
   goTo('top10');
   draw();
 };
-const nameEntry = createNameEntry(stage, (raw) => confirmName(raw));
+// 確定も、名前の画面が出てから約 1 秒は受け付けない（GUI-0003 §0。終わりの画面を触った同じ操作で確定しないように。LLM-TASK-0030）
+const nameEntry = createNameEntry(
+  stage,
+  (raw) => confirmName(raw),
+  () => canLeaveScreen(screenStep),
+);
 
 /** 画面を切り替える。前の画面の操作が次の画面の 1 発にならないよう、たまった入力は捨てる */
 const goTo = (next: Screen) => {
@@ -97,6 +103,7 @@ const goTo = (next: Screen) => {
   screenStep = 0;
   input.read();
   body.dataset.screen = next;
+  diag(`画面 → ${next}${next === 'name' ? `（順位 ${lastRank}）` : ''}`);
   // 名前の入力欄は、名前の画面のときだけ出す。触った操作の中で出すので、iPhone でもキーボードが出る
   if (next === 'name') nameEntry.show();
   else nameEntry.hide();
@@ -209,6 +216,7 @@ if (debug) {
   });
   body.dataset.debug = '1';
   showFps(stage);
+  startDiag(stage, () => screen);
 }
 
 setupPwa();
