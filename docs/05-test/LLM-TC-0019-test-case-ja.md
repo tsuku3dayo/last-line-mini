@@ -6,7 +6,7 @@ status: stable
 version: 1.0
 updated: 2026-11-09
 sources:
-  - LLM-PBI-0019（v1.0）
+  - LLM-PBI-0019（v1.1）
   - LLM-GUI-0001（v1.7）
 verified: null
 ---

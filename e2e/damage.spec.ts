@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, moveMouse, openFrozen } from './helpers';
+import { advance, openFrozen } from './helpers';
 
 // 都市と基地の被弾（LLM-PBI-0003）。PC でも iPhone でも確かめる
 
@@ -32,20 +32,12 @@ test('LLM-TC-0003-02 LLM-TC-0003-03 敵が落ちると都市と基地が壊れ�
   const box = await page.locator('#stage').boundingBox();
   if (!box) throw new Error('ゲーム画面がない');
   const above = { x: box.x + (250 / 480) * box.width, y: box.y + (300 / 640) * box.height }; // 基地 B のま上
-  if (isMobile) {
-    await page.touchscreen.tap(above.x, above.y);
-  } else {
-    await moveMouse(page, above.x, above.y);
-    await page.keyboard.press('KeyX'); // 基地 B のキー
-  }
+  // LLM-PBI-0019 から、PC もクリックで近い基地から撃つ（Z・X・C はなくした）。壊れた B のま上でも、残りの基地から撃つ
+  if (isMobile) await page.touchscreen.tap(above.x, above.y);
+  else await page.mouse.click(above.x, above.y);
   await advance(page, 1);
   const after = await state(page);
-  if (isMobile) {
-    // タッチは残りの基地から撃つ
-    expect(after.interceptors).toHaveLength(1);
-    expect(after.interceptors[0]?.base).not.toBe(1);
-  } else {
-    expect(after.interceptors).toHaveLength(0);
-    await expect(page.locator('body')).toHaveAttribute('data-ammo', '10,0,10');
-  }
+  expect(after.interceptors).toHaveLength(1);
+  expect(after.interceptors[0]?.base).not.toBe(1);
+  await expect(page.locator('body')).toHaveAttribute('data-ammo', /^(9,0,10|10,0,9)$/); // B は 0 のまま
 });

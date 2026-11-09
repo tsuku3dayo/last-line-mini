@@ -1,6 +1,5 @@
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../core/config';
-import type { MoveDir } from '../core/cursor';
-import type { FireButtons, StepInput } from '../core/game';
+import { NO_FIRE, type StepInput } from '../core/game';
 
 /** 画面の位置（CSS ピクセル）を、ゲーム画面の論理座標に直す */
 export function toLogical(clientX: number, clientY: number, rect: { left: number; top: number; width: number; height: number }): { x: number; y: number } {
@@ -10,55 +9,28 @@ export function toLogical(clientX: number, clientY: number, rect: { left: number
   };
 }
 
-type Dir = 'left' | 'right' | 'up' | 'down';
-
-/** 発射キー：Z＝基地 A、X＝基地 B（中央）、C＝基地 C（LLM-GUI-0001 §3） */
-export const FIRE_KEYS: Readonly<Record<string, number>> = { KeyZ: 0, KeyX: 1, KeyC: 2 };
-
-const ARROWS: Record<string, Dir> = {
-  ArrowLeft: 'left',
-  ArrowRight: 'right',
-  ArrowUp: 'up',
-  ArrowDown: 'down',
-};
+/**
+ * この押し方で撃つか：タッチで指が付いた瞬間（LLM-PBI-0002 案 C）と、マウスの左ボタンを押した瞬間（LLM-PBI-0019）。
+ * 右・真ん中のボタンやペンでは撃たない（LLM-TC-0019-02）
+ */
+export function firesOn(e: { readonly pointerType: string; readonly button: number }): boolean {
+  if (e.pointerType === 'touch') return true;
+  return e.pointerType === 'mouse' && e.button === 0;
+}
 
 export interface InputSource {
-  /** 1 ステップぶんの入力を取り出す。マウスの位置は 1 回取り出したら消える */
+  /** 1 ステップぶんの入力を取り出す。マウスの位置と触った点は 1 回取り出したら消える */
   read(): StepInput;
 }
 
 /**
- * キーボード（方向キー）・マウス・タッチ（Pointer Events）を、ステップごとの入力にまとめる（テンプレート §5.3）。
- * 文字の入力欄で打っている文字はゲームの操作にしない。
+ * マウス・タッチ（Pointer Events）を、ステップごとの入力にまとめる（テンプレート §5.3）。
+ * キーボードでは照準を動かさず撃たない（方向キー・Z・X・C はなくした。LLM-PBI-0019・GUI-0001 v1.7 §3）。
+ * キーボードは画面を進める・名前の入力・`?debug=1` の G キーにだけ使い、それは main.ts で受ける。
  */
 export function createInput(stage: HTMLElement): InputSource {
-  const held = new Set<Dir>();
   let pointer: { x: number; y: number } | null = null;
-  // 押した瞬間を、次に読むまで覚えておく（押しっぱなしの連続入力では撃たない）
-  let fire: [boolean, boolean, boolean] = [false, false, false];
-
-  window.addEventListener('keydown', (e) => {
-    if (e.target instanceof HTMLInputElement) return;
-    const base = FIRE_KEYS[e.code];
-    if (base !== undefined) {
-      if (!e.repeat) fire[base] = true;
-      e.preventDefault();
-      return;
-    }
-    const dir = ARROWS[e.key];
-    if (dir) {
-      held.add(dir);
-      e.preventDefault(); // ページがスクロールしないように
-    }
-  });
-  window.addEventListener('keyup', (e) => {
-    const dir = ARROWS[e.key];
-    if (dir) held.delete(dir);
-  });
-  // 窓から離れたら、押したままのキーを離したことにする
-  window.addEventListener('blur', () => held.clear());
-
-  // 指が付いた点。次に読むまでためる（同じステップに 2 本の指なら 2 点）
+  // 触った・クリックした点。次に読むまでためる（同じステップに 2 本の指なら 2 点）
   let taps: { x: number; y: number }[] = [];
 
   stage.addEventListener('pointermove', (e) => {
@@ -67,24 +39,18 @@ export function createInput(stage: HTMLElement): InputSource {
     pointer = toLogical(e.clientX, e.clientY, stage.getBoundingClientRect());
   });
   stage.addEventListener('pointerdown', (e) => {
-    // タッチで指が付いた瞬間だけ撃つ（LLM-PBI-0002 案 C）。マウスのクリックでは撃たない（LLM-GUI-0001 §3）
-    if (e.pointerType !== 'touch') return;
+    // 押した瞬間だけ撃つ。押したまま動かしても撃たない
+    if (!firesOn(e)) return;
     taps.push(toLogical(e.clientX, e.clientY, stage.getBoundingClientRect()));
   });
 
   return {
     read(): StepInput {
-      const move: MoveDir = {
-        x: held.has('right') === held.has('left') ? 0 : held.has('right') ? 1 : -1,
-        y: held.has('down') === held.has('up') ? 0 : held.has('down') ? 1 : -1,
-      };
       const p = pointer;
-      const f: FireButtons = fire;
       const t = taps;
       pointer = null;
-      fire = [false, false, false];
       taps = [];
-      return { move, pointer: p, fire: f, taps: t };
+      return { pointer: p, fire: NO_FIRE, taps: t };
     },
   };
 }

@@ -2,7 +2,7 @@ import { stepBlasts, type Blast } from './blast';
 import { AMMO_PER_BASE, BASE_XS, BONUS_PER_CITY, BONUS_PER_MISSILE, CITY_XS, SCORE_PER_ENEMY } from './config';
 import { applyLandings } from './damage';
 import { allCitiesLost, cannotStop } from './end';
-import { INITIAL_CURSOR, stepCursor, type Cursor, type MoveDir } from './cursor';
+import { INITIAL_CURSOR, stepCursor, type Cursor } from './cursor';
 import { chooseBase, clampTap, type Point } from './touch';
 import { enemyHead, spawnEnemy, stepEnemies, stepImpacts, type EnemyMissile, type Impact } from './enemy';
 import { launch, stepInterceptors, type Interceptor } from './interceptor';
@@ -51,25 +51,26 @@ export interface Bonus {
   readonly cities: number;
 }
 
-/** 3 つの基地の発射ボタン（A・B・C）。押した瞬間だけ true */
+/**
+ * 3 つの基地の発射ボタン（A・B・C）。押した瞬間だけ true。
+ * PC の Z・X・C はなくした（LLM-PBI-0019）が、決まった基地から撃つ場面を作るのにテストで使う
+ */
 export type FireButtons = readonly [boolean, boolean, boolean];
 
 /** 1 ステップぶんの入力 */
 export interface StepInput {
-  /** 方向キーの向き */
-  readonly move: MoveDir;
   /** マウスの位置（論理座標）。このステップで動いていなければ null */
   readonly pointer: { readonly x: number; readonly y: number } | null;
   readonly fire: FireButtons;
   /**
-   * このステップで指が付いた点（論理座標。タッチだけ。LLM-PBI-0002）。
+   * このステップで触った・クリックした点（論理座標。タッチ：LLM-PBI-0002、PC の左クリック：LLM-PBI-0019）。
    * 1 点につき 1 発、いちばん近い残弾のある基地から撃ち、照準を最後の点に移す。省略は「触っていない」
    */
   readonly taps?: readonly Point[];
 }
 
 export const NO_FIRE: FireButtons = Object.freeze([false, false, false] as const);
-export const NO_INPUT: StepInput = Object.freeze({ move: Object.freeze({ x: 0, y: 0 }), pointer: null, fire: NO_FIRE });
+export const NO_INPUT: StepInput = Object.freeze({ pointer: null, fire: NO_FIRE });
 
 export function createGame(seed: number): GameState {
   return {
@@ -133,7 +134,7 @@ export function step(state: GameState, input: StepInput): GameState {
   }
   const taps = input.taps ?? [];
   const begun = beginStep(state.wave, state.bases);
-  const aimed = stepCursor(state.cursor, input.move, input.pointer);
+  const aimed = stepCursor(state.cursor, input.pointer);
   const fired = fire(begun.bases, input.fire, aimed);
   const tapped = fireAtTaps(fired.bases, taps);
   const cursor = cursorAfterTaps(aimed, taps);
