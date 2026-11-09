@@ -58,20 +58,6 @@ body {
   pointer-events: none;
 }
 
-/* 一時的な診断（`?debug=1` だけ。LLM-TASK-0030。PBI-0007 の完成の前に外す） */
-#debug-diag {
-  position: absolute;
-  left: 2px;
-  top: 30px;
-  margin: 0;
-  font-size: 9px;
-  line-height: 1.2;
-  color: #ffe066;
-  background: rgba(0, 0, 0, 0.6);
-  pointer-events: none;
-  white-space: pre;
-}
-
 /* 名前の入力（LLM-GUI-0003 §3）。位置と大きさは src/app/name-entry.ts が割合で決める */
 #name-entry[hidden] {
   display: none;
