@@ -2,7 +2,7 @@
 id: LLM-AC-0005
 type: attested-computation
 title: 点数が HUD に出て、終わりにボーナスが足される
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-09
 sources:
@@ -10,12 +10,12 @@ sources:
   - LLM-TC-0005（v1.0）
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0023〜0024（スプリント 05。PR #39・#40）
-verified: null
+verified: { by: オーナー, at: 2026-11-09T14:06:26+09:00 }
 ---
 
 # LLM-AC-0005 インクリメントの実施記録
 
-LLM-PBI-0005 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 05 のスプリントレビューで PO の受け入れを受ける。
+LLM-PBI-0005 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 05 のスプリントレビュー（2026-11-09）で PO が受け入れた。
 
 - 対象の版：プレビュー `v0.1.0 β 103fff2`（PR #40 のマージ）。自動テストは main `103fff2`
 - 公開：GitHub Actions「Pages」run 42563459515（success）→ https://tsuku3dayo.github.io/last-line-mini/preview/
