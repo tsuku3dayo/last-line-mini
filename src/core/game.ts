@@ -1,5 +1,5 @@
 import { stepBlasts, type Blast } from './blast';
-import { AMMO_PER_BASE, BASE_XS, CITY_XS, SCORE_PER_ENEMY } from './config';
+import { AMMO_PER_BASE, BASE_XS, BONUS_PER_CITY, BONUS_PER_MISSILE, CITY_XS, SCORE_PER_ENEMY } from './config';
 import { applyLandings } from './damage';
 import { allCitiesLost, cannotStop } from './end';
 import { INITIAL_CURSOR, stepCursor, type Cursor, type MoveDir } from './cursor';
@@ -7,7 +7,7 @@ import { chooseBase, clampTap, type Point } from './touch';
 import { enemyHead, spawnEnemy, stepEnemies, stepImpacts, type EnemyMissile, type Impact } from './enemy';
 import { launch, stepInterceptors, type Interceptor } from './interceptor';
 import { seedState } from './random';
-import { beginStep, endStep, INITIAL_WAVE, maySpawn, type WaveProgress } from './wave';
+import { beginStep, endStep, INITIAL_WAVE, isOver, maySpawn, type WaveProgress } from './wave';
 
 export type { Point } from './touch';
 
@@ -39,8 +39,16 @@ export interface GameState {
   readonly impacts: readonly Impact[];
   /** ウェーブの進み具合（LLM-PBI-0004） */
   readonly wave: WaveProgress;
-  /** 今の点数（LLM-PBI-0005）。やり直しは新しいゲームなので 0 から */
+  /** 今の点数（LLM-PBI-0005）。やり直しは新しいゲームなので 0 から。終わった瞬間にボーナスを足す */
   readonly score: number;
+  /** 終わりのボーナスの内訳（数）。終わるまでは null */
+  readonly bonus: Bonus | null;
+}
+
+/** 終わりのボーナスの内訳：終わった瞬間の残弾の数と、残った都市の数 */
+export interface Bonus {
+  readonly missiles: number;
+  readonly cities: number;
 }
 
 /** 3 つの基地の発射ボタン（A・B・C）。押した瞬間だけ true */
@@ -76,6 +84,7 @@ export function createGame(seed: number): GameState {
     impacts: [],
     wave: INITIAL_WAVE,
     score: 0,
+    bonus: null,
   };
 }
 
@@ -156,7 +165,9 @@ export function step(state: GameState, input: StepInput): GameState {
     // 点（LLM-PBI-0005）：爆風で壊れた敵 1 つにつき 25 点。迎撃・誘爆どちらの爆風でも destroyed に入る。地面に着いた敵（landed）は 0 点
     score: state.score + SCORE_PER_ENEMY * enemies.destroyed.length,
   };
-  return judgeEnd(next);
+  const judged = judgeEnd(next);
+  // このステップで終わった（CLEAR か GAME OVER になった）ら、その瞬間にボーナスを足す
+  return isOver(judged.wave.status) ? addBonus(judged) : judged;
 }
 
 /**
@@ -166,10 +177,23 @@ export function step(state: GameState, input: StepInput): GameState {
 function judgeEnd(s: GameState): GameState {
   if (s.wave.status === 'gameover') return s;
   const lost = allCitiesLost(s.cities) || (s.wave.status === 'playing' && cannotStop(s));
-  return lost ? forceGameOver(s) : s;
+  return lost ? toGameOver(s) : s;
 }
 
-/** その場で GAME OVER にする（判定のほか、`?debug=1` の G キーでも使う） */
+const toGameOver = (s: GameState): GameState => ({ ...s, wave: { ...s.wave, status: 'gameover', phaseStep: 0 } });
+
+/**
+ * 終わりのボーナス（LLM-PBI-0005）：残弾 × 5 と残った都市 × 100 を点に足し、内訳を残す。
+ * 壊れた基地の残弾は 0 として数える。1 回だけ足す（もう内訳があれば何もしない）
+ */
+export function addBonus(s: GameState): GameState {
+  if (s.bonus) return s;
+  const missiles = s.bases.reduce((n, b) => n + (b.alive ? b.ammo : 0), 0);
+  const cities = s.cities.filter((c) => c.alive).length;
+  return { ...s, score: s.score + missiles * BONUS_PER_MISSILE + cities * BONUS_PER_CITY, bonus: { missiles, cities } };
+}
+
+/** その場で GAME OVER にする（`?debug=1` の G キー）。判定で終わったときと同じく、ボーナスも足す */
 export function forceGameOver(s: GameState): GameState {
-  return { ...s, wave: { ...s.wave, status: 'gameover', phaseStep: 0 } };
+  return addBonus(toGameOver(s));
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { WaveProgress } from '../../src/core/wave';
-import { canRestart, overlayTexts, RESTART_DELAY_STEPS, showCursor } from '../../src/render/overlay';
+import { bonusLine, canRestart, overlayTexts, RESTART_DELAY_STEPS, showCursor } from '../../src/render/overlay';
 
 const w = (status: WaveProgress['status'], phaseStep = 0, number = 1): WaveProgress => ({ number, status, phaseStep, spawned: 0 });
 const texts = (x: WaveProgress) => overlayTexts(x).map((o) => o.text);
@@ -38,6 +38,35 @@ describe('ウェーブと終わりの表示（LLM-GUI-0001 §5）', () => {
     expect(shown(60)).toBe(false);
     expect(shown(119)).toBe(false);
     expect(shown(120)).toBe(true);
+  });
+
+  it('LLM-TC-0005-03 終わりの画面に、ボーナスの内訳が 2 行（MISSILES・CITIES）で出る（白・2 倍、y 330・354）', () => {
+    const bonus = { missiles: 12, cities: 4 };
+    for (const s of ['clear', 'gameover'] as const) {
+      const out = overlayTexts(w(s, 0), bonus);
+      expect(out[1]).toEqual({ text: 'MISSILES 12 X 5     60', y: 330, scale: 2, color: '#e0e0e0' });
+      expect(out[2]).toEqual({ text: 'CITIES    4 X 100  400', y: 354, scale: 2, color: '#e0e0e0' });
+    }
+    // GAME OVER で都市 0 のとき
+    expect(overlayTexts(w('gameover', 0), { missiles: 30, cities: 0 }).map((o) => o.text)).toEqual(['THE END', 'MISSILES 30 X 5    150', 'CITIES    0 X 100    0']);
+    // 終わる前は出さない（内訳があっても）
+    expect(texts(w('playing', 500))).toEqual([]);
+    expect(overlayTexts(w('playing', 500), bonus)).toEqual([]);
+  });
+
+  it('LLM-TC-0005-03 内訳の 2 行は同じ長さで、いちばん大きい数でも画面の幅に収まる', () => {
+    expect(bonusLine('MISSILES', 30, 5)).toHaveLength(22);
+    expect(bonusLine('CITIES', 6, 100)).toHaveLength(22);
+    expect(bonusLine('MISSILES', 0, 5)).toHaveLength(22);
+    // 5 × 7 ドットの文字は 1 文字 6 ドット（すき間 1）。2 倍で 22 文字 = 264 ドット < 480
+    expect(22 * 6 * 2).toBeLessThan(480);
+  });
+
+  it('LLM-TC-0005-03 「TAP OR PRESS ANY KEY」は内訳の下（y 400）。内訳の 2 行目（y 354〜368）と重ならない', () => {
+    const out = overlayTexts(w('clear', RESTART_DELAY_STEPS), { missiles: 0, cities: 6 });
+    const tap = out.find((o) => o.text === 'TAP OR PRESS ANY KEY');
+    expect(tap?.y).toBe(400);
+    expect(354 + 7 * 2).toBeLessThan(400);
   });
 
   it('LLM-TC-0004-08 CLEAR・GAME OVER のあいだは照準を描かない。WAVE 1 からやり直すと描く', () => {

@@ -19,6 +19,9 @@ export const WAVE_BREAK_STEPS = 3 * STEPS_PER_SECOND;
 
 /** 敵（アタックミサイル）を 1 つ壊したときの点。迎撃でも誘爆でも同じ（仕様書 §4.1・LLM-PBI-0005） */
 export const SCORE_PER_ENEMY = 25;
+/** 終わり（CLEAR・GAME OVER）のボーナス：残弾 1 発・残った都市 1 つあたりの点（仕様書 §4.2・LLM-PBI-0005） */
+export const BONUS_PER_MISSILE = 5;
+export const BONUS_PER_CITY = 100;
 
 /** 都市 1〜6 の x */
 export const CITY_XS = [100, 140, 180, 300, 340, 380] as const;

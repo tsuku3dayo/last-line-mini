@@ -50,7 +50,7 @@ const draw = () => {
   body.dataset.wave = String(state.wave.number);
   body.dataset.status = state.wave.status;
   body.dataset.score = String(state.score);
-  body.dataset.message = overlayTexts(state.wave)
+  body.dataset.message = overlayTexts(state.wave, state.bonus)
     .map((o) => o.text)
     .join('|');
 };

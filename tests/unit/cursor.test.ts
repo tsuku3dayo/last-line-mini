@@ -27,6 +27,18 @@ function run(c: Cursor, move: MoveDir, n: number): Cursor[] {
   return out;
 }
 
+describe('照準の始めの位置（LLM-PBI-0005）', () => {
+  it('LLM-TC-0005-05 始めは (240, 420) で、「WAVE 1」の文字（y 280〜308）と重ならない', () => {
+    expect(INITIAL_CURSOR).toEqual({ x: 240, y: 420, vx: 0, vy: 0 });
+    expect(createGame(1).cursor).toEqual(INITIAL_CURSOR);
+    // 照準の「＋」は中心から上下 6 ドット。上端 414 は文字の下端 308 より下
+    expect(INITIAL_CURSOR.y - 6).toBeGreaterThan(280 + 7 * 4);
+    // 動ける範囲の中
+    expect(INITIAL_CURSOR.y).toBeGreaterThanOrEqual(CURSOR_MIN_Y);
+    expect(INITIAL_CURSOR.y).toBeLessThanOrEqual(CURSOR_MAX_Y);
+  });
+});
+
 describe('照準（方向キーの慣性）', () => {
   it('LLM-TC-0001-01 押し続けるとだんだん速くなり、最高速で止まる', () => {
     const trace = run(INITIAL_CURSOR, RIGHT, 30);

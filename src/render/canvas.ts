@@ -169,5 +169,5 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, view: { 
   drawText(ctx, hudTopText(view.topScore), LOGICAL_WIDTH - 8, 8, COLORS.hudTop, FONT_SCALE, 'right');
 
   // ウェーブと終わりの表示（LLM-GUI-0001 §5）。画面の中央にそろえる
-  for (const o of overlayTexts(state.wave)) drawText(ctx, o.text, LOGICAL_WIDTH / 2, o.y, o.color, o.scale, 'center');
+  for (const o of overlayTexts(state.wave, state.bonus)) drawText(ctx, o.text, LOGICAL_WIDTH / 2, o.y, o.color, o.scale, 'center');
 }
