@@ -7,7 +7,7 @@ import { chooseBase, clampTap, type Point } from './touch';
 import { enemyHead, spawnEnemy, stepEnemies, stepImpacts, type EnemyMissile, type Impact } from './enemy';
 import { launch, stepInterceptors, type Interceptor } from './interceptor';
 import { seedState } from './random';
-import { beginStep, endStep, INITIAL_WAVE, isOver, maySpawn, type WaveProgress } from './wave';
+import { beginStep, endStep, INITIAL_WAVE, isMirvSpawn, isOver, maySpawn, type WaveProgress } from './wave';
 
 export type { Point } from './touch';
 
@@ -143,7 +143,10 @@ export function step(state: GameState, input: StepInput): GameState {
   const newBlasts = moved.arrived.map((m) => ({ x: m.toX, y: m.toY, age: 0 }));
   const blasts = [...stepBlasts(state.blasts), ...newBlasts];
   // 敵はウェーブの中でだけ、そのウェーブの数まで出る。出る間隔はウェーブが始まってからのステップで数える
-  const spawned = maySpawn(begun.wave) ? spawnEnemy(begun.wave.phaseStep, state.rng) : { enemy: null, rng: state.rng };
+  // 多弾頭（LLM-PBI-0008）：WAVE 2 から、ウェーブの中の決まった順番の敵が多弾頭になる
+  const spawned = maySpawn(begun.wave)
+    ? spawnEnemy(begun.wave.phaseStep, state.rng, isMirvSpawn(begun.wave.number, begun.wave.spawned))
+    : { enemy: null, rng: state.rng };
   const enemies = stepEnemies(spawned.enemy ? [...state.enemies, spawned.enemy] : state.enemies, blasts);
   const landedAt = enemies.landed.map((m) => ({ x: m.toX, y: m.toY, age: 0 }));
   // 誘爆（LLM-PBI-0003）：爆風で壊れた敵の弾頭の場所に、迎撃と同じ爆風を出す。

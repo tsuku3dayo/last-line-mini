@@ -108,13 +108,18 @@ function drawBlast(ctx: CanvasRenderingContext2D, b: Blast, step: number): void 
   ctx.stroke();
 }
 
-/** 敵の通常弾：上端から弾頭までの赤橙の航跡と、白い弾頭（LLM-GUI-0001 §2） */
+/**
+ * 敵の弾：上端から弾頭までの赤橙の航跡と、白い弾頭（LLM-GUI-0001 §2）。分かれる前の多弾頭も同じ見た目。
+ * 多弾頭の子の弾は、親の航跡（親が出た点から分かれた点まで）も描く（LLM-GUI-0001 §4。子が残っているあいだ残る）
+ */
 function drawEnemy(ctx: CanvasRenderingContext2D, m: EnemyMissile): void {
   const h = enemyHead(m);
   ctx.strokeStyle = COLORS.enemyTrail;
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(m.fromX, m.fromY);
+  if (m.trailFrom) ctx.moveTo(m.trailFrom.x, m.trailFrom.y);
+  else ctx.moveTo(m.fromX, m.fromY);
+  if (m.trailFrom) ctx.lineTo(m.fromX, m.fromY);
   ctx.lineTo(h.x, h.y);
   ctx.stroke();
   ctx.fillStyle = COLORS.enemyHead;

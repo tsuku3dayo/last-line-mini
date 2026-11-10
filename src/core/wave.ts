@@ -1,4 +1,4 @@
-import { AMMO_PER_BASE, WAVE_BREAK_STEPS, WAVE_ENEMY_COUNTS } from './config';
+import { AMMO_PER_BASE, WAVE_BREAK_STEPS, WAVE_ENEMY_COUNTS, WAVE_MIRV_COUNTS } from './config';
 
 /**
  * ゲームの場面（LLM-PBI-0004）。
@@ -58,4 +58,18 @@ export function endStep(w: WaveProgress, spawnedNow: boolean, enemiesLeft: numbe
     return { number: w.number + 1, status: 'break', phaseStep: 0, spawned: 0 };
   }
   return { ...w, spawned, phaseStep: w.phaseStep + 1 };
+}
+
+/** そのウェーブの多弾頭の数（LLM-PBI-0008） */
+export const mirvsInWave = (n: number): number => WAVE_MIRV_COUNTS[n - 1] ?? 0;
+
+/**
+ * そのウェーブで index 番目（0 から）に出る敵が多弾頭か（LLM-TC-0008-01）。
+ * ウェーブの中で多弾頭が固まらないよう、敵の数の中に均して置く（9 発に 3 発なら 3・6・9 発目）
+ */
+export function isMirvSpawn(n: number, index: number): boolean {
+  const total = enemiesInWave(n);
+  const mirvs = mirvsInWave(n);
+  if (total <= 0 || mirvs <= 0 || index < 0 || index >= total) return false;
+  return Math.floor(((index + 1) * mirvs) / total) > Math.floor((index * mirvs) / total);
 }

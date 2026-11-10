@@ -14,6 +14,13 @@ export const BASE_XS = [40, 240, 440] as const;
 export const AMMO_PER_BASE = 10;
 /** ウェーブごとの敵の数（LLM-PBI-0004。4 ウェーブ・約 3 分。仮の数で LLM-PBI-0011 で直す） */
 export const WAVE_ENEMY_COUNTS = [6, 9, 12, 15] as const;
+/** ウェーブごとの多弾頭の数（LLM-PBI-0008。WAVE 1 は 0、WAVE 2〜4 は約 3 分の 1。LLM-PBI-0011 で直す） */
+export const WAVE_MIRV_COUNTS = [0, 3, 4, 5] as const;
+/** 多弾頭が分かれる高さ（上からの割合）と、分かれる数（LLM-PBI-0008） */
+export const MIRV_SPLIT_MIN_RATIO = 0.4;
+export const MIRV_SPLIT_MAX_RATIO = 0.6;
+export const MIRV_MIN_CHILDREN = 2;
+export const MIRV_MAX_CHILDREN = 3;
 /** ウェーブのあいだ（「WAVE n」を出す時間）。始めの WAVE 1 の前にもある */
 export const WAVE_BREAK_STEPS = 3 * STEPS_PER_SECOND;
 
