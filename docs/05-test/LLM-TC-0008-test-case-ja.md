@@ -2,7 +2,7 @@
 id: LLM-TC-0008
 type: test-case
 title: 多弾頭ミサイルが途中で分かれる
-status: draft
+status: stable
 version: 1.0
 updated: 2026-11-10
 sources:

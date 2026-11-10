@@ -2,7 +2,7 @@
 id: LLM-AC-0008
 type: attested-computation
 title: 多弾頭ミサイルが途中で分かれる
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-10
 sources:
@@ -10,12 +10,12 @@ sources:
   - LLM-TC-0008（v1.0）
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0035（スプリント 08。PR #60）
-verified: null
+verified: { by: オーナー, at: 2026-11-10T18:04:52+09:00 }
 ---
 
 # LLM-AC-0008 インクリメントの実施記録
 
-LLM-PBI-0008 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 08 のスプリントレビューで PO の受け入れを受ける。
+LLM-PBI-0008 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 08 のスプリントレビュー（2026-11-10）で PO が受け入れた。
 
 - 対象の版：プレビュー `v0.1.0 β 0959406`（PR #60 のマージ）。自動テストは main `0959406`
 - 公開：GitHub Actions「Pages」run 42785211264（success、17:48:35 に終わり）→ https://tsuku3dayo.github.io/last-line-mini/preview/
