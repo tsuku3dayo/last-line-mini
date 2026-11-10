@@ -2,7 +2,7 @@
 id: LLM-AC-0019
 type: attested-computation
 title: PC でもマウスのクリックで、近い発射台から撃てる
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-10
 sources:
@@ -10,12 +10,12 @@ sources:
   - LLM-TC-0019（v1.0）
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0033（スプリント 07。PR #55）
-verified: null
+verified: { by: オーナー, at: 2026-11-10T16:33:35+09:00 }
 ---
 
 # LLM-AC-0019 インクリメントの実施記録
 
-LLM-PBI-0019 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 07 のスプリントレビューで PO の受け入れを受ける。
+LLM-PBI-0019 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 07 のスプリントレビュー（2026-11-10）で PO が受け入れた。
 
 - 対象の版：プレビュー `v0.1.0 β fd5d21f`（PR #55 のマージ）。自動テストは main `fd5d21f`
 - 公開：GitHub Actions「Pages」run 42592053747（success）→ https://tsuku3dayo.github.io/last-line-mini/preview/
