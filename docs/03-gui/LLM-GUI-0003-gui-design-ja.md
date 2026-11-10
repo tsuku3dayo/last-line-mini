@@ -8,7 +8,7 @@ updated: 2026-11-09
 sources:
   - LLM-PBI-0006（v1.0）
   - LLM-PBI-0007（v1.0）
-  - LLM-GUI-0001（v1.7）
+  - LLM-GUI-0001（v1.8）
   - LLM-GUI-0002（v1.0）
   - docs/spec/last-line-mini-spec.md (v1.1) §2.1・§5.1・§6.2
 verified: { by: オーナー, at: 2026-11-09T14:45:44+09:00 }
