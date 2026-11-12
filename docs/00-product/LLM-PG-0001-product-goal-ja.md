@@ -7,7 +7,7 @@ version: 1.1
 updated: 2026-11-09
 sources:
   - LLM-IDK-0001（v1.1）
-  - docs/spec/last-line-mini-spec.md (v1.1) §1〜§6
+  - docs/spec/last-line-mini-spec.md (v1.2) §1〜§6
 verified: { by: オーナー, at: 2026-11-09T17:16:21+09:00 }
 ---
 

@@ -7,7 +7,7 @@ version: 1.0
 updated: 2026-11-09
 sources:
   - LLM-PBI-0007（v1.0）
-  - LLM-GUI-0003（v1.0）
+  - LLM-GUI-0003（v1.1）
 verified: null
 ---
 
@@ -16,7 +16,7 @@ verified: null
 | 確認 ID | 確かめること | 方法 | 場所 |
 | :--- | :--- | :--- | :--- |
 | LLM-TC-0007-01 | ランクインしたら、終わりの画面で触るか押すと名前の入力の画面になり、入力欄に打てる。入らなければ TOP10 の画面 | 自動（E2E）＋スクリーンショット | `e2e/name-entry.spec.ts` |
-| LLM-TC-0007-02 | A〜Z・0〜9・`.` の 3 文字まで。小文字は大文字に、ほかは入らない | 自動（単体・E2E） | `tests/unit/name.test.ts`、`e2e/name-entry.spec.ts` |
+| LLM-TC-0007-02 | A〜Z・0〜9・`.` の 3 文字まで。小文字は大文字に、ほかは入らない（2026-11-12 から LLM-TC-0020-01・02 に置き換わる。LLM-PBI-0020。テストは LLM-TASK-0036 で 0020 の決まりに直す） | 自動（単体・E2E） | `tests/unit/name.test.ts`、`e2e/name-entry.spec.ts` |
 | LLM-TC-0007-03 | Enter か `OK` で確定すると名前つきで TOP10 に入り TOP10 の画面へ。空なら `...` | 自動（単体・E2E） | `tests/unit/name.test.ts`、`e2e/name-entry.spec.ts` |
 | LLM-TC-0007-04 | TOP10 の画面で今回の行が 0.5 秒ごとに点滅 | 自動（単体）＋スクリーンショット | `tests/unit/screens.test.ts` |
 | LLM-TC-0007-05 | 名前を打っているあいだ、キーでゲームが始まらず、画面も切り替わらない | 自動（E2E） | `e2e/name-entry.spec.ts` |
