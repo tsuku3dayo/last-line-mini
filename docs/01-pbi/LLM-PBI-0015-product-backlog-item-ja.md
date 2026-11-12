@@ -8,7 +8,7 @@ version: 0.1
 updated: 2026-11-02
 sources:
   - LLM-PG-0001（v1.1）
-  - docs/spec/last-line-mini-spec.md (v1.1) §1（操作体系）
+  - docs/spec/last-line-mini-spec.md (v1.2) §1（操作体系）
 verified: null
 ---
 

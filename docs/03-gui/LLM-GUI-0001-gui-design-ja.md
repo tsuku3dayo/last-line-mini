@@ -14,7 +14,7 @@ sources:
   - LLM-PBI-0019（v1.1）
   - LLM-PBI-0008（v1.0）
   - LLM-SA-0001（v1.0）§4
-  - docs/spec/last-line-mini-spec.md (v1.1) §6.1
+  - docs/spec/last-line-mini-spec.md (v1.2) §6.1
 verified: { by: オーナー, at: 2026-11-10T17:13:20+09:00 }
 ---
 

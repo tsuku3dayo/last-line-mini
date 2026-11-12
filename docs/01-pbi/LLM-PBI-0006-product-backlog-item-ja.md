@@ -8,7 +8,7 @@ version: 1.0
 updated: 2026-11-09
 sources:
   - LLM-PG-0001（v1.1）
-  - docs/spec/last-line-mini-spec.md (v1.1) §2.1・§5.1〜§5.3・§6.1・§6.2
+  - docs/spec/last-line-mini-spec.md (v1.2) §2.1・§5.1〜§5.3・§6.1・§6.2
 verified: { by: オーナー, at: 2026-11-09T14:45:44+09:00 }
 ---
 

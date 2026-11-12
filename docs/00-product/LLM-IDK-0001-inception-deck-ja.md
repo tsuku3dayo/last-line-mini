@@ -6,7 +6,7 @@ status: stable
 version: 1.1
 updated: 2026-11-04
 sources:
-  - docs/spec/last-line-mini-spec.md (v1.1) §1〜§6
+  - docs/spec/last-line-mini-spec.md (v1.2) §1〜§6
   - docs/spec/ARCHITECTURE-TEMPLATE.md（2026-11-02 版）
 verified: { by: オーナー, at: 2026-11-04T14:26:58+09:00 }
 ---
