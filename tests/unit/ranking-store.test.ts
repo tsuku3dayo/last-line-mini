@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CHANNELS } from '../../channels.mjs';
+import { isValidName } from '../../src/core/name';
 import { loadRanking, parseRanking, rankingKey, saveRanking, type StoredRecord } from '../../src/storage/ranking-store';
 
 const ok: StoredRecord = { name: 'AB.', score: 1735, cities: 4, missiles: 12, status: 'CLEARED', createdAt: '2026-11-09T05:00:00.000Z' };
@@ -41,7 +42,9 @@ describe('TOP10 の保存（LLM-PBI-0006）', () => {
     expect(parseRanking('{これは JSON でない')).toEqual([]);
     expect(parseRanking('{"a":1}')).toEqual([]); // 配列でない
     expect(parseRanking(JSON.stringify([{ ...ok, score: '100' }]))).toEqual([]); // 型が違う
-    expect(parseRanking(JSON.stringify([{ ...ok, name: 'abcd' }]))).toEqual([]); // 使えない名前
+    expect(parseRanking(JSON.stringify([{ ...ok, name: '' }]))).toEqual([]); // 空の名前
+    expect(parseRanking(JSON.stringify([{ ...ok, name: 'a\u0000b' }]))).toEqual([]); // 制御文字
+    expect(parseRanking(JSON.stringify([{ ...ok, name: 'x'.repeat(33) }]))).toEqual([]); // 長すぎる
     expect(parseRanking(JSON.stringify([{ ...ok, status: 'WIN' }]))).toEqual([]);
     expect(parseRanking(JSON.stringify([{ ...ok, score: -1 }]))).toEqual([]);
     expect(parseRanking(JSON.stringify([{ ...ok, score: 1.5 }]))).toEqual([]);
@@ -58,5 +61,25 @@ describe('TOP10 の保存（LLM-PBI-0006）', () => {
   it('LLM-TC-0006-03 localStorage が使えない（読めない・書けない）ときも止まらない', () => {
     expect(loadRanking(fakeStorage({}, { throwOnGet: true }), 'k')).toEqual([]);
     expect(saveRanking(fakeStorage({}, { throwOnSet: true }), 'k', [ok])).toBe(false);
+  });
+});
+
+describe('名前の決まりで読む（LLM-PBI-0020）', () => {
+  it('LLM-TC-0020-05 今までの記録（英字 3 文字・...）は新しい決まりでもそのまま読める', () => {
+    const old = [ok, { ...ok, name: 'AAA', score: 900 }, { ...ok, name: '...', score: 50 }];
+    expect(parseRanking(JSON.stringify(old), isValidName).map((r) => r.name)).toEqual(['AB.', 'AAA', '...']);
+  });
+
+  it('LLM-TC-0020-05 日本語 8 文字の名前を保存して読み戻すと同じ名前', () => {
+    const s = fakeStorage();
+    const jp = { ...ok, name: 'やまだたろう山田' };
+    expect(saveRanking(s, 'k', [jp])).toBe(true);
+    expect(loadRanking(s, 'k', isValidName)).toEqual([jp]);
+  });
+
+  it('LLM-TC-0020-05 決まりに合わない名前（9 文字・絵文字・空白）の記録は壊れたものとして空の TOP10', () => {
+    for (const name of ['あいうえおかきくけ', 'た😀', 'a b']) {
+      expect(parseRanking(JSON.stringify([ok, { ...ok, name }]), isValidName), name).toEqual([]);
+    }
   });
 });

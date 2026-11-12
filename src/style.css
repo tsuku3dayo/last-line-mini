@@ -78,15 +78,19 @@ body {
   letter-spacing: 0.3em;
   /* 字間は最後の文字のうしろにも付くので、左にも同じだけあけて真ん中にそろえる */
   padding-left: 0.3em;
-  text-transform: uppercase;
   user-select: text;
   -webkit-user-select: text;
   touch-action: manipulation;
 }
 
+/* 名前は日本語も入るので、ブラウザのゴシック（TOP10 の名前と同じ。GUI-0003 v1.1 §3）。大文字にはしない */
 #name-input {
   cursor: text;
   outline: none;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", sans-serif;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  padding-left: 0.05em;
 }
 
 #name-ok {

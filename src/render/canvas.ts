@@ -5,12 +5,14 @@ import type { GameState } from '../core/game';
 import { interceptorPosition, type Interceptor } from '../core/interceptor';
 import { groundProfile } from '../core/terrain';
 import { COLORS } from './colors';
-import { textPixels, textWidth } from './font';
+import { GLYPH_HEIGHT, textPixels, textWidth } from './font';
 import { hud1pText, hudTopText } from './hud';
 import { overlayTexts, showCursor, type OverlayText } from './overlay';
 
 const FONT_SCALE = 2;
 const PROFILE = groundProfile();
+/** 名前の文字（LLM-GUI-0003 v1.1 §1）。端末に入っている日本語のゴシックを順に探す */
+export const NAME_FONT = 'bold 20px "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", sans-serif';
 
 /** 自前の文字で書く。align は x の基準 */
 export function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, color: string, scale = FONT_SCALE, align: 'left' | 'right' | 'center' = 'left'): void {
@@ -155,7 +157,26 @@ export function renderScreen(ctx: CanvasRenderingContext2D, texts: readonly Over
   ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   drawText(ctx, hud1pText(view.score), 8, 8, COLORS.hud1p);
   drawText(ctx, hudTopText(view.topScore), LOGICAL_WIDTH - 8, 8, COLORS.hudTop, FONT_SCALE, 'right');
-  for (const o of texts) drawText(ctx, o.text, LOGICAL_WIDTH / 2, o.y, o.color, o.scale, 'center');
+  for (const o of texts) {
+    const x = o.x ?? LOGICAL_WIDTH / 2;
+    const align = o.align ?? 'center';
+    if (o.font === 'name') drawNameText(ctx, o.text, x, o.y, o.color, o.scale, align);
+    else drawText(ctx, o.text, x, o.y, o.color, o.scale, align);
+  }
+}
+
+/**
+ * 名前をブラウザの文字（ゴシック・太字・大きさ 20）で描く（LLM-GUI-0003 v1.1 §1）。
+ * 自前の文字（scale 倍で高さ 7 × scale）と縦の真ん中をそろえる
+ */
+function drawNameText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, color: string, scale: number, align: 'left' | 'right' | 'center'): void {
+  ctx.save();
+  ctx.font = NAME_FONT;
+  ctx.fillStyle = color;
+  ctx.textAlign = align;
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y + (GLYPH_HEIGHT * scale) / 2);
+  ctx.restore();
 }
 
 export function render(ctx: CanvasRenderingContext2D, state: GameState, view: { score: number; topScore: number }): void {
