@@ -61,9 +61,9 @@ test('LLM-TC-0006-01 開くとタイトル画面：題字と TOP10 の 10 行。
   expect(rows.slice(0, 12)).toEqual([
     'LAST LINE MINI',
     'TOP 10',
-    ' 1  AAA  012345',
-    ' 2  B.C  009870',
-    ...Array.from({ length: 8 }, (_, i) => `${String(i + 3).padStart(2)}  ---  000000`),
+    '1 AAA 012345',
+    '2 B.C 009870',
+    ...Array.from({ length: 8 }, (_, i) => `${i + 3} --- 000000`),
   ]);
   await poke(page, isMobile); // 出てから約 1 秒は受け付けない
   await expect(body).toHaveAttribute('data-screen', 'title');
@@ -86,13 +86,13 @@ test('LLM-TC-0006-04 LLM-TC-0006-06 ランクインした点が TOP10 の画面�
   // LLM-PBI-0007 から：ランクインしたら先に名前の入力（空のまま確定すると ...）
   await confirmName(page, isMobile);
   const rows = await rowsOf(page);
-  expect(rows.slice(0, 4)).toEqual(['TOP 10', ' 1  AAA  000900', ' 2  ...  000500', ' 3  LOW  000100']);
+  expect(rows.slice(0, 4)).toEqual(['TOP 10', '1 AAA 000900', '2 ... 000500', '3 LOW 000100']);
   expect(rows).toContain('YOUR SCORE 000500');
 
   // 開き直すと、タイトルの TOP10 に残っている（保存の中身は置き直さない）
   await page.reload();
   await expect(page.locator('body')).toHaveAttribute('data-screen', 'title');
-  expect((await rowsOf(page)).slice(2, 5)).toEqual([' 1  AAA  000900', ' 2  ...  000500', ' 3  LOW  000100']);
+  expect((await rowsOf(page)).slice(2, 5)).toEqual(['1 AAA 000900', '2 ... 000500', '3 LOW 000100']);
   await expect(page.locator('body')).toHaveAttribute('data-top', '900');
 });
 
@@ -107,7 +107,7 @@ test('LLM-TC-0006-04 ランクインしなくても TOP10 の画面に今回の�
   const body = page.locator('body');
   await expect(body).toHaveAttribute('data-screen', 'top10');
   const rows = await rowsOf(page);
-  expect(rows[10]).toBe('10  P9   000910');
+  expect(rows[10]).toBe('10 P9 000910');
   expect(rows).toContain('YOUR SCORE 000910');
   expect(rows.filter((r) => r.includes('...'))).toEqual([]); // 入っていない
   await advance(page, 120);

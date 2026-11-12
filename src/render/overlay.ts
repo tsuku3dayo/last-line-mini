@@ -10,11 +10,17 @@ const BLINK_STEPS = Math.round(0.5 * STEPS_PER_SECOND);
 
 export interface OverlayText {
   readonly text: string;
-  /** 文字の上端の y（論理座標）。x はゲーム画面の中央 */
+  /** 文字の上端の y（論理座標） */
   readonly y: number;
   /** 5 × 7 ドットの文字の倍率 */
   readonly scale: number;
   readonly color: string;
+  /** x の基準（論理座標）。ないときはゲーム画面の中央 */
+  readonly x?: number;
+  /** x をどこに合わせるか。ないときは中央 */
+  readonly align?: 'left' | 'right' | 'center';
+  /** 'name'：名前だけブラウザの文字で描く（自前の文字は英数字だけのため。LLM-GUI-0003 v1.1）。ないときは自前の文字 */
+  readonly font?: 'name';
 }
 
 /** やり直してよいか：CLEAR か GAME OVER になってから約 1 秒たった（それより前の操作は受け付けない） */

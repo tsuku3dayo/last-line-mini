@@ -26,25 +26,35 @@ export function rankingKey(channel: 'production' | 'preview'): string {
 
 const isCount = (v: unknown, max: number): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= max;
 
-function isRecord(v: unknown): v is StoredRecord {
+/**
+ * 名前の形の検査の既定：1 文字以上・制御文字なし・長すぎない（8 文字の絵文字なしの名前は 16 単位あれば足りるので 32 まで）。
+ * 使える文字の決まり（LLM-PBI-0020）は core にあり、storage は core を import しないので、呼ぶ側（main）が isName で渡す
+ */
+const isNameShape = (name: string): boolean => name.length > 0 && name.length <= 32 && !/\p{Cc}/u.test(name);
+
+const isRecord = (isName: (name: string) => boolean) => (v: unknown): v is StoredRecord => {
   if (typeof v !== 'object' || v === null) return false;
   const r = v as Record<string, unknown>;
   return (
     typeof r.name === 'string' &&
-    /^[A-Z0-9.]{1,3}$/.test(r.name) &&
+    isNameShape(r.name) &&
+    isName(r.name) &&
     isCount(r.score, Number.MAX_SAFE_INTEGER) &&
     isCount(r.cities, 6) &&
     isCount(r.missiles, 30) &&
     (r.status === 'CLEARED' || r.status === 'GAME_OVER') &&
     typeof r.createdAt === 'string'
   );
-}
+};
+
+/** 名前の決まりを渡さないときは形だけを見る */
+const anyName = (): boolean => true;
 
 /**
- * 保存の中身を読む。何もない・JSON でない・形が違うものが 1 件でもあれば、空の TOP10 にする（起動を止めない。GUI-0003 §4）。
- * 点の高い順（同じ点は日時の古い順）にそろえ、10 件まで
+ * 保存の中身を読む。何もない・JSON でない・形が違うもの（名前が isName に合わないものも）が 1 件でもあれば、
+ * 空の TOP10 にする（起動を止めない。GUI-0003 §4）。点の高い順（同じ点は日時の古い順）にそろえ、10 件まで
  */
-export function parseRanking(text: string | null): StoredRecord[] {
+export function parseRanking(text: string | null, isName: (name: string) => boolean = anyName): StoredRecord[] {
   if (!text) return [];
   let data: unknown;
   try {
@@ -52,16 +62,16 @@ export function parseRanking(text: string | null): StoredRecord[] {
   } catch {
     return [];
   }
-  if (!Array.isArray(data) || !data.every(isRecord)) return [];
+  if (!Array.isArray(data) || !data.every(isRecord(isName))) return [];
   return [...data]
     .sort((a, b) => b.score - a.score || (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0))
     .slice(0, MAX);
 }
 
 /** 読み込む。localStorage が使えないときも空の TOP10 */
-export function loadRanking(storage: KeyValueStorage, key: string): StoredRecord[] {
+export function loadRanking(storage: KeyValueStorage, key: string, isName: (name: string) => boolean = anyName): StoredRecord[] {
   try {
-    return parseRanking(storage.getItem(key));
+    return parseRanking(storage.getItem(key), isName);
   } catch {
     return [];
   }

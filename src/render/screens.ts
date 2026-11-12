@@ -23,13 +23,39 @@ const HIDDEN = '#05070f';
 export const ROW_TOP_Y = 176;
 export const ROW_GAP = 28;
 
-/** TOP10 の 1 行：`順位（右寄せ 2 桁）  名前  点（6 桁）`。記録のない行は `---  000000` */
-export function rankRowText(rank: number, record: { readonly name: string; readonly score: number } | undefined): string {
-  const name = record ? record.name.padEnd(3) : '---';
-  return `${String(rank).padStart(2)}  ${name}  ${formatScore(record?.score ?? 0)}`;
+/**
+ * TOP10 の 1 行の列の位置（GUI-0003 v1.1 §1）。1 行の幅は 336（x 72〜408）で画面の中央にそろう。
+ * 順位は x 96 に右寄せ（2 桁で 72〜96）、名前は x 120 から左寄せ（枠は 120〜312）、点は x 336 から（6 桁で 336〜408）
+ */
+export const ROW_RANK_RIGHT_X = 96;
+export const ROW_NAME_X = 120;
+export const ROW_NAME_BOX_WIDTH = 192;
+export const ROW_SCORE_X = 336;
+
+/** TOP10 の 1 行：順位（右寄せ 2 桁）・名前（ブラウザの文字）・点（6 桁）の 3 つ。記録のない行は `---`・`000000` */
+export function rankRowTexts(rank: number, record: { readonly name: string; readonly score: number } | undefined, y: number, color: string): OverlayText[] {
+  return [
+    { text: String(rank), y, scale: 2, color, x: ROW_RANK_RIGHT_X, align: 'right' },
+    { text: record ? record.name : '---', y, scale: 2, color, x: ROW_NAME_X, align: 'left', font: 'name' },
+    { text: formatScore(record?.score ?? 0), y, scale: 2, color, x: ROW_SCORE_X, align: 'left' },
+  ];
 }
 
-/** 今回の行の点滅：画面が出たときから 0.5 秒ごとに、緑と見えない色を行き来する（LLM-TC-0007-04） */
+/**
+ * E2E が読む画面の文字（`data-message`）の 1 行ずつ。同じ y に続けて並ぶ文字（TOP10 の順位・名前・点）は空白 1 つでつなぐ。
+ * 例：`1 AAA 012345`・`10 --- 000000`
+ */
+export function messageLines(texts: readonly OverlayText[]): string[] {
+  const out: { y: number; parts: string[] }[] = [];
+  for (const o of texts) {
+    const last = out.at(-1);
+    if (last && last.y === o.y) last.parts.push(o.text);
+    else out.push({ y: o.y, parts: [o.text] });
+  }
+  return out.map((l) => l.parts.join(' '));
+}
+
+/** 今回の行の点滅：画面が出たときから 0.5 秒ごとに、緑と見えない色を行き来する（LLM-TC-0007-04。名前も一緒に。LLM-TC-0020-04） */
 export const highlightOn = (screenStep: number): boolean => Math.floor(screenStep / BLINK_STEPS) % 2 === 0;
 
 function rows(list: readonly { readonly name: string; readonly score: number }[], highlight: { rank: number; screenStep: number } | null = null): OverlayText[] {
@@ -37,8 +63,8 @@ function rows(list: readonly { readonly name: string; readonly score: number }[]
     const r = list[i];
     const base = r ? WHITE : DIM;
     const color = highlight && highlight.rank === i + 1 ? (highlightOn(highlight.screenStep) ? GREEN : HIDDEN) : base;
-    return { text: rankRowText(i + 1, r), y: ROW_TOP_Y + ROW_GAP * i, scale: 2, color };
-  });
+    return rankRowTexts(i + 1, r, ROW_TOP_Y + ROW_GAP * i, color);
+  }).flat();
 }
 
 /** 「TAP OR PRESS ANY KEY」：受け付けるようになってから 0.5 秒ごとに点滅 */

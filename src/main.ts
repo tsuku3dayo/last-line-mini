@@ -12,9 +12,9 @@ import { insertRecord, topScore, type RankRecord } from './core/ranking';
 import { isOver } from './core/wave';
 import { render, renderScreen } from './render/canvas';
 import { canRestart, overlayTexts } from './render/overlay';
-import { canLeaveScreen, nameTexts, titleTexts, top10Texts, type Screen } from './render/screens';
+import { canLeaveScreen, messageLines, nameTexts, titleTexts, top10Texts, type Screen } from './render/screens';
 import { createNameEntry } from './app/name-entry';
-import { EMPTY_NAME, finalName } from './core/name';
+import { EMPTY_NAME, finalName, isValidName } from './core/name';
 import { loadRanking, rankingKey, saveRanking, type KeyValueStorage } from './storage/ranking-store';
 
 // 組み立て（ここだけが全部の層を知る）。画面の流れ：タイトル → プレイ → 終わり → TOP10 → タイトル（LLM-GUI-0003 §0）
@@ -48,7 +48,7 @@ const store: KeyValueStorage = (() => {
   }
 })();
 const rankingStoreKey = rankingKey(__APP_CHANNEL__);
-let ranking: readonly RankRecord[] = loadRanking(store, rankingStoreKey);
+let ranking: readonly RankRecord[] = loadRanking(store, rankingStoreKey, isValidName);
 /** このプレイの記録をもう TOP10 に入れたか（終わった瞬間に 1 回だけ） */
 let recorded = false;
 /** このプレイがランクインした順位（入らなければ null）。名前の入力と TOP10 の点滅に使う（LLM-PBI-0007） */
@@ -148,7 +148,7 @@ const draw = () => {
   body.dataset.status = state.wave.status;
   body.dataset.score = String(state.score);
   body.dataset.top = String(topScore(ranking));
-  body.dataset.message = messages.map((o) => o.text).join('|');
+  body.dataset.message = messageLines(messages).join('|');
 };
 
 /**

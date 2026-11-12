@@ -35,14 +35,15 @@ export function createNameEntry(stage: HTMLElement, onConfirm: (raw: string) => 
   const input = document.createElement('input');
   input.id = 'name-input';
   input.type = 'text';
-  input.setAttribute('aria-label', '名前（3 文字）');
-  // iPhone の自動の大文字・直し・候補を切る（GUI-0003 §3）。大文字にするのは sanitizeName
+  input.setAttribute('aria-label', '名前（8 文字まで）');
+  // iPhone の自動の大文字・直し・候補を切る（GUI-0003 §3）。日本語入力の変換の候補は、これとは別に出る
   input.setAttribute('autocapitalize', 'off');
   input.setAttribute('autocorrect', 'off');
   input.setAttribute('autocomplete', 'off');
   input.setAttribute('enterkeyhint', 'done');
   input.spellcheck = false;
-  Object.assign(input.style, at(168, 200, 144, 48));
+  // 全角 8 文字が見えるよう幅 288（GUI-0003 v1.1 §3）
+  Object.assign(input.style, at(96, 200, 288, 48));
 
   const ok = document.createElement('button');
   ok.id = 'name-ok';
@@ -56,14 +57,29 @@ export function createNameEntry(stage: HTMLElement, onConfirm: (raw: string) => 
     onConfirm(input.value);
   };
 
-  // 打つたびに、使える文字の 3 文字までに整える（小文字は大文字に）
-  input.addEventListener('input', () => {
+  // 打つたびに、使える文字の 8 文字までに整える（LLM-TC-0020-01・02）。
+  // 日本語入力の変換中（確定する前）は整えない。整えると変換中の文字が書き換わり、変換が壊れる（LLM-TC-0020-03）。
+  // 変換の確定（compositionend）のあとに整える。input と compositionend の順はブラウザで違うので、両方で見る
+  let composing = false;
+  const tidy = () => {
     const v = sanitizeName(input.value);
     if (v !== input.value) input.value = v;
+  };
+  input.addEventListener('compositionstart', () => {
+    composing = true;
   });
-  // Enter（iPhone はキーボードの確定）で確定
+  input.addEventListener('compositionend', () => {
+    composing = false;
+    tidy();
+  });
+  input.addEventListener('input', (e) => {
+    if (composing || (e as InputEvent).isComposing) return;
+    tidy();
+  });
+  // Enter（iPhone はキーボードの確定）で確定。変換中の Enter は変換の確定なので受けない。
+  // Safari は変換を確定する Enter を compositionend のあとに keyCode 229 で送るので、それも受けない
   input.addEventListener('keydown', (e) => {
-    if (e.key !== 'Enter' || e.isComposing) return;
+    if (e.key !== 'Enter' || e.isComposing || composing || e.keyCode === 229) return;
     e.preventDefault();
     confirm();
   });
@@ -78,6 +94,7 @@ export function createNameEntry(stage: HTMLElement, onConfirm: (raw: string) => 
   return {
     show() {
       input.value = '';
+      composing = false;
       box.hidden = false;
       input.focus();
     },
@@ -87,9 +104,9 @@ export function createNameEntry(stage: HTMLElement, onConfirm: (raw: string) => 
     },
     setScale(scale: number) {
       // iPhone の Safari は 16 px より小さい入力欄で画面を勝手に拡大するので、16 px 以上にする（GUI-0003 §3）
-      const px = `${Math.max(16, Math.round(28 * scale))}px`;
-      input.style.fontSize = px;
-      ok.style.fontSize = px;
+      // 入力欄はブラウザの文字で 24（GUI-0003 v1.1 §3）、OK は 28 のまま
+      input.style.fontSize = `${Math.max(16, Math.round(24 * scale))}px`;
+      ok.style.fontSize = `${Math.max(16, Math.round(28 * scale))}px`;
     },
     get value() {
       return input.value;
