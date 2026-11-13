@@ -7,7 +7,7 @@ version: 1.0
 updated: 2026-11-10
 sources:
   - LLM-PBI-0008（v1.0）
-  - LLM-TC-0008（v1.0）
+  - LLM-TC-0008（v1.1）
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0035（スプリント 08。PR #60）
 verified: { by: オーナー, at: 2026-11-10T18:04:52+09:00 }

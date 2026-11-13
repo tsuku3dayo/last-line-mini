@@ -1,7 +1,51 @@
 import { describe, expect, it } from 'vitest';
 import { AMMO_PER_BASE, WAVE_BREAK_STEPS, WAVE_ENEMY_COUNTS } from '../../src/core/config';
 import { createGame, NO_INPUT, step, type GameState } from '../../src/core/game';
-import { WAVE_COUNT } from '../../src/core/wave';
+import { enemySpeedRange, spawnIntervalSteps } from '../../src/core/enemy';
+import { estimatedClearSeconds, WAVE_COUNT } from '../../src/core/wave';
+
+describe('難しさ（LLM-PBI-0011）', () => {
+  it('LLM-TC-0011-02 ウェーブが進むほど、敵の速さが下がらず、出る間隔が長くならない。WAVE 5 は WAVE 1 より速く短い', () => {
+    for (let n = 2; n <= WAVE_COUNT; n++) {
+      expect(enemySpeedRange(n).min).toBeGreaterThanOrEqual(enemySpeedRange(n - 1).min);
+      expect(enemySpeedRange(n).max).toBeGreaterThanOrEqual(enemySpeedRange(n - 1).max);
+      expect(spawnIntervalSteps(n)).toBeLessThanOrEqual(spawnIntervalSteps(n - 1));
+    }
+    expect(enemySpeedRange(WAVE_COUNT).min).toBeGreaterThan(enemySpeedRange(1).min);
+    expect(spawnIntervalSteps(WAVE_COUNT)).toBeLessThan(spawnIntervalSteps(1));
+  });
+
+  it('LLM-TC-0011-03 守り切ったときの長さの目安が 150〜210 秒（2 分半〜3 分半）', () => {
+    const sec = estimatedClearSeconds();
+    expect(sec).toBeGreaterThanOrEqual(150);
+    expect(sec).toBeLessThanOrEqual(210);
+  });
+
+  it('LLM-TC-0011-01 出る間隔と速さは、ウェーブの中で実際に出た敵に効いている', () => {
+    const s = runUntil(createGame(11), (x) => x.wave.number === WAVE_COUNT && x.wave.status === 'playing', true);
+    const steps: number[] = [];
+    const speeds: number[] = [];
+    let seen = 0;
+    runUntil(
+      s,
+      (x) => {
+        if (x.wave.spawned > seen) {
+          seen = x.wave.spawned;
+          steps.push(x.wave.phaseStep);
+          const m = x.enemies[x.enemies.length - 1];
+          if (m) speeds.push(m.speed);
+        }
+        return seen >= 3;
+      },
+      true,
+    );
+    expect(steps[1]! - steps[0]!).toBe(spawnIntervalSteps(WAVE_COUNT));
+    for (const v of speeds) {
+      expect(v).toBeGreaterThanOrEqual(enemySpeedRange(WAVE_COUNT).min);
+      expect(v).toBeLessThanOrEqual(enemySpeedRange(WAVE_COUNT).max);
+    }
+  });
+});
 
 const run = (s: GameState, n: number): GameState => {
   let cur = s;
@@ -33,9 +77,12 @@ describe('ウェーブ（LLM-PBI-0004）', () => {
     expect(started.wave).toMatchObject({ number: 1, status: 'playing' });
   });
 
-  it('LLM-TC-0004-01 4 ウェーブで、それぞれ決まった数（6・9・12・15）の敵だけが出る', () => {
-    expect(WAVE_COUNT).toBe(4);
-    expect([...WAVE_ENEMY_COUNTS]).toEqual([6, 9, 12, 15]);
+  // LLM-TC-0004-01（4 ウェーブ・6・9・12・15）は LLM-TC-0011-01 に置き換わった（LLM-PBI-0011）
+  it('LLM-TC-0011-01 5 ウェーブで、それぞれ決まった数の敵だけが出て、ウェーブが進むほど多い。5 ウェーブ目が終わると CLEAR', () => {
+    expect(WAVE_COUNT).toBe(5);
+    for (let i = 1; i < WAVE_ENEMY_COUNTS.length; i++) {
+      expect(WAVE_ENEMY_COUNTS[i]).toBeGreaterThan(WAVE_ENEMY_COUNTS[i - 1] ?? 0);
+    }
     let s = createGame(3);
     const counts: number[] = [];
     for (let n = 1; n <= WAVE_COUNT; n++) {
@@ -52,7 +99,7 @@ describe('ウェーブ（LLM-PBI-0004）', () => {
       );
       counts.push(max);
     }
-    expect(counts).toEqual([6, 9, 12, 15]);
+    expect(counts).toEqual([...WAVE_ENEMY_COUNTS]);
     expect(s.wave.status).toBe('clear');
   });
 
@@ -90,7 +137,11 @@ describe('ウェーブ（LLM-PBI-0004）', () => {
 
   it('LLM-TC-0004-03 最後のウェーブの敵をすべて出し終えて画面の敵がいなくなると CLEAR', () => {
     const s = runUntil(createGame(7), (x) => x.wave.status === 'playing');
-    const lastEnding: GameState = { ...s, enemies: [], wave: { number: 4, status: 'playing', phaseStep: 999, spawned: WAVE_ENEMY_COUNTS[3] } };
+    const lastEnding: GameState = {
+      ...s,
+      enemies: [],
+      wave: { number: WAVE_COUNT, status: 'playing', phaseStep: 999, spawned: WAVE_ENEMY_COUNTS[WAVE_COUNT - 1] ?? 0 },
+    };
     expect(step(lastEnding, NO_INPUT).wave.status).toBe('clear');
     // 敵が残っているうちは CLEAR にならない
     const stillFlying: GameState = {

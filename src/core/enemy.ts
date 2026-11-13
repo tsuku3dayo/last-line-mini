@@ -10,6 +10,8 @@ import {
   MIRV_SPLIT_MAX_RATIO,
   MIRV_SPLIT_MIN_RATIO,
   STEPS_PER_SECOND,
+  WAVE_SPAWN_INTERVAL_SECONDS,
+  WAVE_SPEED_SCALES,
 } from './config';
 import { nextRandom } from './random';
 import { groundYAt } from './terrain';
@@ -50,11 +52,27 @@ export interface Impact {
   readonly age: number;
 }
 
-/** 速さ：1 秒に 32〜48 ドット（画面の上から地面まで約 12.3〜18.5 秒） */
+/** WAVE 1 の速さ：1 秒に 32〜48 ドット（画面の上から地面まで約 12.3〜18.5 秒）。後のウェーブは WAVE_SPEED_SCALES 倍 */
 export const ENEMY_MIN_SPEED = 32 / STEPS_PER_SECOND;
 export const ENEMY_MAX_SPEED = 48 / STEPS_PER_SECOND;
-/** 出る間隔。ウェーブが始まってからのステップで数える（ウェーブごとの数は config の WAVE_ENEMY_COUNTS） */
-export const ENEMY_SPAWN_INTERVAL = 2 * STEPS_PER_SECOND;
+
+/** ウェーブ n の倍率（表の外は最後のウェーブの値） */
+const speedScaleOf = (n: number): number => WAVE_SPEED_SCALES[Math.min(Math.max(n, 1), WAVE_SPEED_SCALES.length) - 1] ?? 1;
+
+/** ウェーブ n の敵の速さの範囲（1 ステップあたり。LLM-TC-0011-02） */
+export function enemySpeedRange(n: number): { min: number; max: number } {
+  const k = speedScaleOf(n);
+  return { min: ENEMY_MIN_SPEED * k, max: ENEMY_MAX_SPEED * k };
+}
+
+/** ウェーブ n の出る間隔（ステップ）。ウェーブが始まってからのステップで数える（LLM-TC-0011-02） */
+export function spawnIntervalSteps(n: number): number {
+  const s = WAVE_SPAWN_INTERVAL_SECONDS[Math.min(Math.max(n, 1), WAVE_SPAWN_INTERVAL_SECONDS.length) - 1] ?? 2;
+  return Math.round(s * STEPS_PER_SECOND);
+}
+
+/** WAVE 1 の出る間隔（ステップ） */
+export const ENEMY_SPAWN_INTERVAL = spawnIntervalSteps(1);
 export const ENEMY_FIRST_SPAWN_STEP = Math.round(0.5 * STEPS_PER_SECOND);
 /** 閃光の長さ（LLM-GUI-0001 §4：0.2 秒） */
 export const IMPACT_STEPS = Math.round(0.2 * STEPS_PER_SECOND);
@@ -98,10 +116,12 @@ function rollSplit(rng: number): { split: MirvSplit; rng: number } {
 
 /**
  * このステップで出るなら、乱数で出る位置・目標・速さを決める。
- * mirv なら多弾頭にする（分かれ方の乱数は、そのあとに続けて取る。通常の弾だけのウェーブの乱数の並びは変わらない）
+ * mirv なら多弾頭にする（分かれ方の乱数は、そのあとに続けて取る。通常の弾だけのウェーブの乱数の並びは変わらない）。
+ * wave はウェーブの番号で、出る間隔と速さが決まる（LLM-PBI-0011。WAVE 1 は前と同じ）
  */
-export function spawnEnemy(step: number, rng: number, mirv = false): { enemy: EnemyMissile | null; rng: number } {
-  if (step < ENEMY_FIRST_SPAWN_STEP || (step - ENEMY_FIRST_SPAWN_STEP) % ENEMY_SPAWN_INTERVAL !== 0) return { enemy: null, rng };
+export function spawnEnemy(step: number, rng: number, mirv = false, wave = 1): { enemy: EnemyMissile | null; rng: number } {
+  if (step < ENEMY_FIRST_SPAWN_STEP || (step - ENEMY_FIRST_SPAWN_STEP) % spawnIntervalSteps(wave) !== 0) return { enemy: null, rng };
+  const speed = enemySpeedRange(wave);
   const a = nextRandom(rng);
   const b = nextRandom(a.state);
   const c = nextRandom(b.state);
@@ -112,7 +132,7 @@ export function spawnEnemy(step: number, rng: number, mirv = false): { enemy: En
     fromY: 0,
     toX: target.x,
     toY: target.y,
-    speed: ENEMY_MIN_SPEED + c.value * (ENEMY_MAX_SPEED - ENEMY_MIN_SPEED),
+    speed: speed.min + c.value * (speed.max - speed.min),
     traveled: 0,
   };
   if (!mirv) return { enemy, rng: c.state };

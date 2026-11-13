@@ -3,8 +3,8 @@ id: LLM-TC-0008
 type: test-case
 title: 多弾頭ミサイルが途中で分かれる
 status: stable
-version: 1.0
-updated: 2026-11-10
+version: 1.1
+updated: 2026-11-13
 sources:
   - LLM-PBI-0008（v1.0）
   - LLM-GUI-0001（v1.8）
@@ -15,7 +15,7 @@ verified: null
 
 | 確認 ID | 確かめること | 方法 | 場所 |
 | :--- | :--- | :--- | :--- |
-| LLM-TC-0008-01 | WAVE 1 は通常の弾だけ。WAVE 2〜4 で 3・4・5 発が多弾頭 | 自動（単体） | `tests/unit/mirv.test.ts` |
+| LLM-TC-0008-01 | WAVE 1 は通常の弾だけ。WAVE 2〜4 で 3・4・5 発が多弾頭（2026-11-13 から、数と何発目かは LLM-TC-0011-04 に置き換わる。LLM-PBI-0011） | 自動（単体） | `tests/unit/mirv.test.ts` |
 | LLM-TC-0008-02 | 上から 4〜6 割の高さで、2〜3 発の子の弾に分かれる。子はそれぞれ別の都市・基地を狙い、速さは親と同じ | 自動（単体・E2E） | `tests/unit/mirv.test.ts`、`e2e/mirv.spec.ts` |
 | LLM-TC-0008-03 | 分かれる前に落とすと 25 点で子は出ない。分かれたあとは子 1 発ごとに 25 点。子も誘爆し、着くと都市・基地を壊す | 自動（単体） | `tests/unit/mirv.test.ts` |
 | LLM-TC-0008-04 | 分かれるまでは通常の弾と同じ見た目。分かれた点から子の航跡が伸び、親の航跡は子があるあいだ残る | 自動（E2E。画面の画素で航跡を読む）＋スクリーンショット（PC・iPhone SE で分かれる前と後を目で見る） | `e2e/mirv.spec.ts` |
