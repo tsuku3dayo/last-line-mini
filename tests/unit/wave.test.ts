@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AMMO_PER_BASE, WAVE_BREAK_STEPS, WAVE_ENEMY_COUNTS } from '../../src/core/config';
+import { AMMO_PER_BASE, WAVE_BREAK_STEPS, WAVE_ENEMY_COUNTS, WAVE_MIRV_COUNTS } from '../../src/core/config';
 import { createGame, NO_INPUT, step, type GameState } from '../../src/core/game';
 import { enemySpeedRange, spawnIntervalSteps } from '../../src/core/enemy';
 import { estimatedClearSeconds, WAVE_COUNT } from '../../src/core/wave';
@@ -80,6 +80,10 @@ describe('ウェーブ（LLM-PBI-0004）', () => {
   // LLM-TC-0004-01（4 ウェーブ・6・9・12・15）は LLM-TC-0011-01 に置き換わった（LLM-PBI-0011）
   it('LLM-TC-0011-01 5 ウェーブで、それぞれ決まった数の敵だけが出て、ウェーブが進むほど多い。5 ウェーブ目が終わると CLEAR', () => {
     expect(WAVE_COUNT).toBe(5);
+    // v1.1：敵の攻撃は v1.0（敵 8・12・15・18・21、多弾頭 0・3・4・5・6、間隔 2.0〜1.6 秒）の 1.5 倍（数は切り上げ、間隔は 1/1.5）
+    expect([...WAVE_ENEMY_COUNTS]).toEqual([8, 12, 15, 18, 21].map((c) => Math.ceil(c * 1.5)));
+    expect([...WAVE_MIRV_COUNTS]).toEqual([0, 3, 4, 5, 6].map((c) => Math.ceil(c * 1.5)));
+    expect([1, 2, 3, 4, 5].map((n) => spawnIntervalSteps(n))).toEqual([2.0, 1.9, 1.8, 1.7, 1.6].map((s) => Math.round((s / 1.5) * 120)));
     for (let i = 1; i < WAVE_ENEMY_COUNTS.length; i++) {
       expect(WAVE_ENEMY_COUNTS[i]).toBeGreaterThan(WAVE_ENEMY_COUNTS[i - 1] ?? 0);
     }
@@ -105,7 +109,8 @@ describe('ウェーブ（LLM-PBI-0004）', () => {
 
   it('LLM-TC-0004-02 ウェーブの敵がすべて消えると、次のウェーブのあいだ（約 3 秒）になり、そのあいだは敵が出ない', () => {
     let s = runUntil(createGame(5), (x) => x.wave.status === 'playing');
-    s = runUntil(s, (x) => x.wave.status === 'break');
+    // 敵が多い（LLM-PBI-0011 v1.1）と都市が全部壊れて GAME OVER になることがあるので、都市と基地は戻す（TEAM 5.6）
+    s = runUntil(s, (x) => x.wave.status === 'break', true);
     expect(s.wave.number).toBe(2);
     expect(s.enemies).toHaveLength(0);
     const inBreak = run(s, WAVE_BREAK_STEPS);
