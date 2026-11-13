@@ -2,7 +2,7 @@
 id: LLM-AC-0020
 type: attested-computation
 title: 名前に日本語も使え、8 文字まで入れられる
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-13
 sources:
@@ -10,12 +10,12 @@ sources:
   - LLM-TC-0020（v1.0）
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0036（スプリント 09。PR #64）
-verified: null
+verified: { by: オーナー, at: 2026-11-13T16:54:48+09:00 }
 ---
 
 # LLM-AC-0020 インクリメントの実施記録
 
-LLM-PBI-0020 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 09 のスプリントレビューで PO の受け入れを確かめる。
+LLM-PBI-0020 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 09 のスプリントレビュー（2026-11-13）で PO が受け入れた。
 
 - 対象の版：プレビュー `v0.1.0 β 21d84ac`（PR #65 のマージ）。ゲームのコードは PR #64 のマージ `088715b` と同じ（`088715b`〜`21d84ac` の差は `docs/process/` の 2 ファイルだけ）
 - 公開：GitHub Actions「Pages」run 43144528745（`088715b` の push で始まり、success、2026-11-12 11:56:33 に終わり）→ https://tsuku3dayo.github.io/last-line-mini/preview/
