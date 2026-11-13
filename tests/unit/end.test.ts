@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { WAVE_ENEMY_COUNTS } from '../../src/core/config';
 import type { EnemyMissile } from '../../src/core/enemy';
 import { createGame, forceGameOver, NO_INPUT, step, type GameState } from '../../src/core/game';
+import { WAVE_COUNT } from '../../src/core/wave';
 
 /** x へ落ちる敵。traveled はその深さ（591.5 なら次のステップで着く） */
 const toward = (x: number, traveled = 100, speed = 0.001): EnemyMissile => ({ fromX: x, fromY: 0, toX: x, toY: 592, speed, traveled });
@@ -29,7 +30,7 @@ describe('終わりの判定（LLM-PBI-0004）', () => {
   });
 
   it('LLM-TC-0004-04 最後のウェーブが終わる瞬間に都市が全部壊れたら、CLEAR ではなく GAME OVER', () => {
-    const base = playing({ wave: { number: 4, status: 'playing', phaseStep: 999, spawned: WAVE_ENEMY_COUNTS[3] } });
+    const base = playing({ wave: { number: WAVE_COUNT, status: 'playing', phaseStep: 999, spawned: WAVE_ENEMY_COUNTS[WAVE_COUNT - 1] ?? 0 } });
     const fiveLost = { ...base, cities: base.cities.map((c, i) => ({ ...c, alive: i === 0 })) };
     const s = step({ ...fiveLost, enemies: [toward(100, 591.5, 1)] }, NO_INPUT);
     expect(s.wave.status).toBe('gameover');

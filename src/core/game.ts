@@ -133,7 +133,7 @@ export function step(state: GameState, input: StepInput): GameState {
     return { ...state, step: state.step + 1, wave: { ...state.wave, phaseStep: state.wave.phaseStep + 1 } };
   }
   const taps = input.taps ?? [];
-  const begun = beginStep(state.wave, state.bases);
+  const begun = beginStep(state.wave, state.bases, state.rng);
   const aimed = stepCursor(state.cursor, input.pointer);
   const fired = fire(begun.bases, input.fire, aimed);
   const tapped = fireAtTaps(fired.bases, taps);
@@ -143,9 +143,10 @@ export function step(state: GameState, input: StepInput): GameState {
   const newBlasts = moved.arrived.map((m) => ({ x: m.toX, y: m.toY, age: 0 }));
   const blasts = [...stepBlasts(state.blasts), ...newBlasts];
   // 敵はウェーブの中でだけ、そのウェーブの数まで出る。出る間隔はウェーブが始まってからのステップで数える
-  // 多弾頭（LLM-PBI-0008）：WAVE 2 から、ウェーブの中の決まった順番の敵が多弾頭になる
+  // 多弾頭（LLM-PBI-0008）：WAVE 2 から、ウェーブの始めに乱数で決めた順番の敵が多弾頭になる（LLM-PBI-0011）
+  // 出る間隔と速さはウェーブごと（LLM-PBI-0011）
   const spawned = maySpawn(begun.wave)
-    ? spawnEnemy(begun.wave.phaseStep, state.rng, isMirvSpawn(begun.wave.number, begun.wave.spawned))
+    ? spawnEnemy(begun.wave.phaseStep, state.rng, isMirvSpawn(begun.wave, begun.wave.spawned), begun.wave.number)
     : { enemy: null, rng: state.rng };
   const enemies = stepEnemies(spawned.enemy ? [...state.enemies, spawned.enemy] : state.enemies, blasts);
   const landedAt = enemies.landed.map((m) => ({ x: m.toX, y: m.toY, age: 0 }));

@@ -3,6 +3,7 @@ import { BLAST_GROW_STEPS, BLAST_LIFE_STEPS } from '../../src/core/blast';
 import { BONUS_PER_CITY, BONUS_PER_MISSILE, SCORE_PER_ENEMY, WAVE_ENEMY_COUNTS } from '../../src/core/config';
 import type { EnemyMissile } from '../../src/core/enemy';
 import { createGame, forceGameOver, NO_INPUT, step, type GameState } from '../../src/core/game';
+import { WAVE_COUNT } from '../../src/core/wave';
 import { hud1pText, hudTopText } from '../../src/render/hud';
 
 /** (x, 0) から真下に落ちる、ほとんど止まっている敵。traveled は今の深さ */
@@ -74,7 +75,7 @@ describe('点数（LLM-PBI-0005）', () => {
     const lastEnding: GameState = {
       ...s,
       enemies: [],
-      wave: { number: 4, status: 'playing', phaseStep: 999, spawned: WAVE_ENEMY_COUNTS[3] },
+      wave: { number: WAVE_COUNT, status: 'playing', phaseStep: 999, spawned: WAVE_ENEMY_COUNTS[WAVE_COUNT - 1] ?? 0 },
       bases: [
         { x: 40, ammo: 3, alive: true },
         { x: 240, ammo: 0, alive: false },

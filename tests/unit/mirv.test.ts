@@ -14,7 +14,7 @@ import {
 } from '../../src/core/enemy';
 import { createGame, NO_INPUT, step, type GameState } from '../../src/core/game';
 import { seedState } from '../../src/core/random';
-import { isMirvSpawn } from '../../src/core/wave';
+import { isMirvSpawn, mirvPlan, type WaveProgress } from '../../src/core/wave';
 
 // 多弾頭ミサイル（LLM-PBI-0008）
 
@@ -35,32 +35,61 @@ function playing(n: number, over: Partial<GameState> = {}): GameState {
   return { ...s, wave: { number: n, status: 'playing', phaseStep: 1, spawned: 1 }, ...over };
 }
 
-/** 種 seed で、ウェーブ n に出る敵をすべて集める（出る順に） */
+/** 種 seed で、ウェーブ n に出る敵をすべて集める（出る順に。多弾頭の並びは種から決める） */
 function spawnsOfWave(n: number, seed: number): EnemyMissile[] {
   let rng = seedState(seed);
+  const w: WaveProgress = { number: n, status: 'playing', phaseStep: 0, spawned: 0, mirvAt: mirvPlan(n, rng) };
   const out: EnemyMissile[] = [];
   for (let st = 0; out.length < (WAVE_ENEMY_COUNTS[n - 1] ?? 0); st++) {
-    const r = spawnEnemy(st, rng, isMirvSpawn(n, out.length));
+    const r = spawnEnemy(st, rng, isMirvSpawn(w, out.length), n);
     rng = r.rng;
     if (r.enemy) out.push(r.enemy);
   }
   return out;
 }
 
+/** ゲームを進めて、ウェーブ n の始めに決まった多弾頭の並びを取る（都市・基地は毎ステップ戻す。TEAM 5.6） */
+function planInGame(seed: number, n: number): readonly number[] {
+  const s0 = createGame(seed);
+  let s = s0;
+  for (let i = 0; i < 120 * 600 && !(s.wave.number === n && s.wave.status === 'playing'); i++) s = { ...step(s, NO_INPUT), cities: s0.cities, bases: s0.bases };
+  return s.wave.mirvAt ?? [];
+}
+
+// LLM-TC-0008-01 の「均して置く（3・6・9 発目）」は LLM-TC-0011-04 に置き換わった（LLM-PBI-0011）
 describe('どの弾が多弾頭か', () => {
-  it('LLM-TC-0008-01 WAVE 1 は通常の弾だけ。WAVE 2〜4 は 3・4・5 発が多弾頭', () => {
-    expect(WAVE_MIRV_COUNTS).toEqual([0, 3, 4, 5]);
+  it('LLM-TC-0011-04 多弾頭の数はウェーブごとに決まった数で、WAVE 1 は 0。2 発続けては出ない', () => {
+    expect(WAVE_MIRV_COUNTS[0]).toBe(0);
     for (const [i, total] of WAVE_ENEMY_COUNTS.entries()) {
       const n = i + 1;
-      const flags = Array.from({ length: total }, (_, k) => isMirvSpawn(n, k));
-      expect(flags.filter(Boolean).length).toBe(WAVE_MIRV_COUNTS[i]);
+      for (let seed = 1; seed <= 50; seed++) {
+        const plan = mirvPlan(n, seedState(seed));
+        expect(plan).toHaveLength(WAVE_MIRV_COUNTS[i] ?? 0);
+        for (const k of plan) expect(k).toBeGreaterThanOrEqual(0);
+        for (const k of plan) expect(k).toBeLessThan(total);
+        for (let j = 1; j < plan.length; j++) expect(plan[j]! - plan[j - 1]!).toBeGreaterThanOrEqual(2);
+      }
       expect(spawnsOfWave(n, 7).filter((m) => m.split).length).toBe(WAVE_MIRV_COUNTS[i]);
     }
-    // 固まらずに均して置く（9 発に 3 発なら 3・6・9 発目）
-    expect(Array.from({ length: 9 }, (_, k) => isMirvSpawn(2, k))).toEqual([false, false, true, false, false, true, false, false, true]);
-    // ウェーブの外の番号では多弾頭にしない
-    expect(isMirvSpawn(2, 9)).toBe(false);
-    expect(isMirvSpawn(5, 0)).toBe(false);
+  });
+
+  it('LLM-TC-0011-04 並びは種から決まる：同じ種なら同じ、ちがう種ではちがう並びが出る', () => {
+    expect(mirvPlan(3, seedState(5))).toEqual(mirvPlan(3, seedState(5)));
+    const seen = new Set(Array.from({ length: 30 }, (_, k) => mirvPlan(3, seedState(k + 1)).join(',')));
+    expect(seen.size).toBeGreaterThan(10);
+    // ゲームの中でも、同じ種なら同じ並び
+    expect(planInGame(4, 2)).toEqual(planInGame(4, 2));
+    expect(planInGame(4, 2)).toHaveLength(WAVE_MIRV_COUNTS[1] ?? 0);
+  });
+
+  it('LLM-TC-0011-04 並びを決めても、敵の乱数の並びは進まない（WAVE 1 は前と同じ敵が出る）', () => {
+    const s0 = createGame(9);
+    let s = s0;
+    while (s.wave.status !== 'playing') s = step(s, NO_INPUT);
+    expect(s.rng).toBe(s0.rng); // ウェーブが始まっても乱数の状態は同じ
+    expect(s.wave.mirvAt).toEqual([]);
+    // 並びのないウェーブ（前の形の状態）では多弾頭にしない
+    expect(isMirvSpawn({ number: 2, status: 'playing', phaseStep: 0, spawned: 0 }, 0)).toBe(false);
   });
 
   it('LLM-TC-0008-01 通常の弾だけのときの乱数の並びは変わらない（WAVE 1 は前と同じ敵が出る）', () => {

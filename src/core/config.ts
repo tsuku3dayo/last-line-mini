@@ -12,10 +12,18 @@ export const MAX_STEPS_PER_FRAME = 12;
 /** 基地 A・B・C の x と、最初の弾の数 */
 export const BASE_XS = [40, 240, 440] as const;
 export const AMMO_PER_BASE = 10;
-/** ウェーブごとの敵の数（LLM-PBI-0004。4 ウェーブ・約 3 分。仮の数で LLM-PBI-0011 で直す） */
-export const WAVE_ENEMY_COUNTS = [6, 9, 12, 15] as const;
-/** ウェーブごとの多弾頭の数（LLM-PBI-0008。WAVE 1 は 0、WAVE 2〜4 は約 3 分の 1。LLM-PBI-0011 で直す） */
-export const WAVE_MIRV_COUNTS = [0, 3, 4, 5] as const;
+/**
+ * ウェーブごとの難しさ（LLM-PBI-0011：5 ウェーブ・後半ほど難しく・守り切って 2 分半〜3 分半）。
+ * 4 つの表は同じ長さ（ウェーブの数）。実機で PO が確かめて値だけ直す（LLM-TC-0011-06）
+ */
+/** 敵の数（多弾頭は親で 1 発と数える） */
+export const WAVE_ENEMY_COUNTS = [8, 12, 15, 18, 21] as const;
+/** そのうち多弾頭の数（WAVE 1 は 0。LLM-PBI-0008） */
+export const WAVE_MIRV_COUNTS = [0, 3, 4, 5, 6] as const;
+/** 敵が出る間隔（秒） */
+export const WAVE_SPAWN_INTERVAL_SECONDS = [2.0, 1.9, 1.8, 1.7, 1.6] as const;
+/** 敵の落ちる速さの倍率（WAVE 1 の速さが 1） */
+export const WAVE_SPEED_SCALES = [1.0, 1.1, 1.2, 1.3, 1.4] as const;
 /** 多弾頭が分かれる高さ（上からの割合）と、分かれる数（LLM-PBI-0008） */
 export const MIRV_SPLIT_MIN_RATIO = 0.4;
 export const MIRV_SPLIT_MAX_RATIO = 0.6;

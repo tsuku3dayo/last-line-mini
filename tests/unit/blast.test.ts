@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BLAST_GROW_STEPS, BLAST_LIFE_STEPS, BLAST_MAX_RADIUS, blastRadius, isInsideBlast, stepBlasts } from '../../src/core/blast';
+import { BLAST_GROW_STEPS, BLAST_HOLD_STEPS, BLAST_LIFE_STEPS, BLAST_MAX_RADIUS, blastRadius, isInsideBlast, stepBlasts } from '../../src/core/blast';
 import { stepEnemies, type EnemyMissile } from '../../src/core/enemy';
 import { createGame, NO_INPUT, step, type GameState } from '../../src/core/game';
 
@@ -7,6 +7,16 @@ import { createGame, NO_INPUT, step, type GameState } from '../../src/core/game'
 const falling = (x: number, y: number, speed = 0.3): EnemyMissile => ({ fromX: x, fromY: 0, toX: x, toY: 592, speed, traveled: y });
 
 describe('爆風', () => {
+  it('LLM-TC-0011-05 最大の半径は 36（24 の 1.5 倍）で、最大のまま 1 秒残る。広がる 0.4 秒・縮む 0.5 秒', () => {
+    expect(BLAST_MAX_RADIUS).toBe(36);
+    expect(BLAST_GROW_STEPS).toBe(48);
+    expect(BLAST_HOLD_STEPS).toBe(120);
+    expect(BLAST_LIFE_STEPS).toBe(48 + 120 + 60);
+    // 最大になってから 1 秒（120 ステップ）のあいだずっと 36
+    for (let age = BLAST_GROW_STEPS - 1; age < BLAST_GROW_STEPS + BLAST_HOLD_STEPS; age++) expect(blastRadius(age)).toBe(36);
+    expect(blastRadius(BLAST_GROW_STEPS + BLAST_HOLD_STEPS)).toBeLessThan(36);
+  });
+
   it('LLM-TC-0001-06 決まった半径まで広がってから縮んで消える', () => {
     expect(blastRadius(BLAST_GROW_STEPS - 1)).toBe(BLAST_MAX_RADIUS);
     expect(blastRadius(0)).toBeLessThan(BLAST_MAX_RADIUS / 4);

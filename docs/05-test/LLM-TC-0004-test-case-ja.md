@@ -3,8 +3,8 @@ id: LLM-TC-0004
 type: test-case
 title: 1 面がウェーブで進み、CLEAR か GAME OVER で終わる
 status: stable
-version: 1.3
-updated: 2026-11-10
+version: 1.4
+updated: 2026-11-13
 sources:
   - LLM-PBI-0004（v1.0）
   - LLM-GUI-0001（v1.8）
@@ -17,7 +17,7 @@ verified: null
 
 | 確認 ID | 確かめること | 方法 | 場所 |
 | :--- | :--- | :--- | :--- |
-| LLM-TC-0004-01 | 始めは WAVE 1。4 ウェーブで、ウェーブごとの敵の数が決まった数（仮：6・9・12・15）だけ出る | 自動（単体） | `tests/unit/wave.test.ts` |
+| LLM-TC-0004-01 | 始めは WAVE 1。4 ウェーブで、ウェーブごとの敵の数が決まった数（仮：6・9・12・15）だけ出る（2026-11-13 から LLM-TC-0011-01 に置き換わる。LLM-PBI-0011。始めは WAVE 1 のところは今のまま） | 自動（単体） | `tests/unit/wave.test.ts` |
 | LLM-TC-0004-02 | ウェーブの敵がすべて消えると約 3 秒のあいだ敵が出ず、壊れていない基地の弾が 10 発に戻り、次のウェーブになる。壊れた基地は 0 のまま | 自動（単体・E2E） | `tests/unit/wave.test.ts`、`e2e/flow.spec.ts` |
 | LLM-TC-0004-03 | 最後のウェーブの敵がすべて消え、都市が残っていれば CLEAR。「DEFENSE COMPLETE」が描かれる | 自動（単体・E2E） | `tests/unit/wave.test.ts`、`e2e/flow.spec.ts` |
 | LLM-TC-0004-04 | 6 都市がすべて壊れた瞬間に GAME OVER（その場で止まる）。「THE END」が描かれる | 自動（単体・E2E） | `tests/unit/wave.test.ts`、`e2e/flow.spec.ts` |
