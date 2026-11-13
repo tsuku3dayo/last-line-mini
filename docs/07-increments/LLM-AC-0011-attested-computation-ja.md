@@ -2,7 +2,7 @@
 id: LLM-AC-0011
 type: attested-computation
 title: 難しさを調整し、1 プレイ 3 分前後で後半ほど難しくする
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-13
 sources:
@@ -11,12 +11,12 @@ sources:
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0038（スプリント 10。PR #69）
   - LLM-TASK-0040（スプリント 10。PR #71。実機確認の差し戻しの手戻り）
-verified: null
+verified: { by: オーナー, at: 2026-11-13T18:26:04+09:00 }
 ---
 
 # LLM-AC-0011 インクリメントの実施記録
 
-LLM-PBI-0011 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 10 のスプリントレビューで PO が受け入れるかを決める。
+LLM-PBI-0011 が完成の定義（`docs/definition-of-done.md` v1.0）を満たしたことの記録。スプリント 10 のスプリントレビュー（2026-11-13）で PO が受け入れた。
 
 - 対象の版：プレビュー `v0.1.0 β 9f82b92`（PR #71 のマージ。最後のコードの PR）
 - 公開：GitHub Actions「Pages」run 43398263740（`9f82b92` の push で始まり、success、2026-11-13 18:07:22 に終わり）→ https://tsuku3dayo.github.io/last-line-mini/preview/
