@@ -46,7 +46,7 @@ test('LLM-TC-0004-03 LLM-TC-0004-06 LLM-TC-0006-04 CLEAR で「DEFENSE COMPLETE�
     const api = window.__llm;
     if (!api) throw new Error('テスト用の入口がない');
     const s = api.getState();
-    api.setState({ ...s, enemies: [], wave: { number: 5, status: 'playing', phaseStep: 999, spawned: 21 } });
+    api.setState({ ...s, enemies: [], wave: { number: 5, status: 'playing', phaseStep: 999, spawned: 32 } });
   });
   await advance(page, 1);
   await expect(body).toHaveAttribute('data-status', 'clear');
@@ -117,7 +117,7 @@ test('LLM-TC-0005-02 LLM-TC-0005-03 CLEAR の瞬間に残弾 × 5 と都市 × 1
     api.setState({
       ...s,
       enemies: [],
-      wave: { number: 5, status: 'playing', phaseStep: 999, spawned: 21 },
+      wave: { number: 5, status: 'playing', phaseStep: 999, spawned: 32 },
       bases: [
         { x: 40, ammo: 3, alive: true },
         { x: 240, ammo: 0, alive: false },
@@ -175,7 +175,7 @@ test('LLM-TC-0004-02 WAVE 1 のあいだ → WAVE 1 → 敵がいなくなると
     api.setState({
       ...s,
       enemies: [],
-      wave: { ...s.wave, spawned: 8 }, // WAVE 1 の敵の数（config の WAVE_ENEMY_COUNTS[0]。LLM-PBI-0011）
+      wave: { ...s.wave, spawned: 12 }, // WAVE 1 の敵の数（config の WAVE_ENEMY_COUNTS[0]。LLM-PBI-0011）
       bases: s.bases.map((b, i) => (i === 0 ? { ...b, ammo: 2 } : b)),
     });
   });

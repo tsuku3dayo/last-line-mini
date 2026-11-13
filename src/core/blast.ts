@@ -9,9 +9,9 @@ export interface Blast {
 
 /** いちばん大きいときの半径（論理ドット。LLM-PBI-0011：24 の 1.5 倍） */
 export const BLAST_MAX_RADIUS = 36;
-/** 広がる時間・いちばん大きいまま保つ時間（LLM-PBI-0011：1 秒）・縮む時間（ステップ） */
+/** 広がる時間・いちばん大きいまま保つ時間（LLM-PBI-0011 v1.1：0.5 秒）・縮む時間（ステップ） */
 export const BLAST_GROW_STEPS = Math.round(0.4 * STEPS_PER_SECOND);
-export const BLAST_HOLD_STEPS = Math.round(1.0 * STEPS_PER_SECOND);
+export const BLAST_HOLD_STEPS = Math.round(0.5 * STEPS_PER_SECOND);
 export const BLAST_SHRINK_STEPS = Math.round(0.5 * STEPS_PER_SECOND);
 export const BLAST_LIFE_STEPS = BLAST_GROW_STEPS + BLAST_HOLD_STEPS + BLAST_SHRINK_STEPS;
 
