@@ -44,6 +44,15 @@ const title = /<title>([^<]*)<\/title>/.exec(html)?.[1];
 if (title !== config.name) errors.push(`<title> が ${config.name} でない: ${title}`);
 if (!html.includes(`content="${config.name}"`)) errors.push(`apple-mobile-web-app-title が ${config.name} でない`);
 
+// 起動の復旧（LLM-TC-0012-05）：boot.js があり、index.html がアプリ本体（モジュール）より先に読む。チャンネルの値を渡している
+const bootAt = html.indexOf(`src="${config.base}boot.js"`);
+const moduleAt = html.search(/<script type="module"/);
+if (!existsSync(join(dir, 'boot.js'))) errors.push('boot.js がない');
+if (bootAt < 0) errors.push(`index.html が ${config.base}boot.js を読んでいない`);
+else if (moduleAt >= 0 && bootAt > moduleAt) errors.push('index.html が boot.js をアプリ本体より後に読んでいる');
+if (!html.includes(`data-app-id="${config.appId}"`)) errors.push(`boot.js に app-id（${config.appId}）を渡していない`);
+if (!html.includes(`data-scope="${config.base}"`)) errors.push(`boot.js に範囲（${config.base}）を渡していない`);
+
 // PWA（LLM-TC-9001-04・05）
 const iconDir = `${config.base}icons/${channel}/`;
 if (!html.includes(`href="${iconDir}icon-180.png"`)) errors.push(`apple-touch-icon が ${iconDir}icon-180.png でない`);
