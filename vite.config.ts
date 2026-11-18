@@ -37,7 +37,11 @@ export default defineConfig({
           .replaceAll('%APP_NAME%', config.name)
           .replaceAll('%THEME_COLOR%', config.themeColor)
           // public のファイルの参照は vite が base を付けないので、base 付きで書く
-          .replaceAll('%ICON_HREF%', `${config.base}${ICON_DIR}/icon-180.png`),
+          .replaceAll('%ICON_HREF%', `${config.base}${ICON_DIR}/icon-180.png`)
+          // 起動の復旧（LLM-PBI-0012）。消すキャッシュと SW の範囲をチャンネルに合わせる
+          .replaceAll('%BOOT_SRC%', `${config.base}boot.js`)
+          .replaceAll('%APP_ID%', config.appId)
+          .replaceAll('%APP_BASE%', config.base),
     },
     VitePWA({
       registerType: 'prompt', // 勝手に切り替えない（更新ボタンは LLM-PBI-0012）

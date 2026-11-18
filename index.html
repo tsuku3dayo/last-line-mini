@@ -10,6 +10,8 @@
     <meta name="theme-color" content="%THEME_COLOR%" />
     <link rel="apple-touch-icon" href="%ICON_HREF%" />
     <title>%APP_NAME%</title>
+    <!-- 起動の復旧（LLM-PBI-0012）。アプリ本体より先に読む普通のスクリプト -->
+    <script src="%BOOT_SRC%" data-app-id="%APP_ID%" data-scope="%APP_BASE%"></script>
   </head>
   <body>
     <main id="app">

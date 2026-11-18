@@ -217,6 +217,8 @@ watchLayout(stage, canvas, (layout, dpr) => {
 
 goTo('title');
 const loop = startLoop((steps) => advanceBy(steps), draw);
+// 最初の画面を出したので、起動の復旧（public/boot.js）の 8 秒のタイマーを止める（LLM-TC-0012-04）
+(window as { __lastLineMiniBooted?: () => void }).__lastLineMiniBooted?.();
 
 applyUpdate = setupPwa(onNeedRefresh).applyUpdate;
 
