@@ -149,3 +149,128 @@ body {
   color: #6b7280;
   pointer-events: none;
 }
+
+/* クレジット（LLM-GUI-0003 §7。LLM-PBI-0013）。位置は src/app/credits-screen.ts が割合で決め、
+   文字・余白は --u（論理の 1 の長さ。ゲーム画面の倍率）で決める */
+#credits-button,
+#credits-back {
+  position: absolute;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", sans-serif;
+  font-size: max(12px, calc(var(--u, 1px) * 20));
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+  z-index: 1;
+}
+
+#credits-button {
+  border: 2px solid #6cff8a;
+  border-radius: calc(var(--u, 1px) * 6);
+  background: #05070f;
+  color: #6cff8a;
+  font-weight: bold;
+}
+
+#credits-button[hidden],
+#credits[hidden] {
+  display: none;
+}
+
+#credits {
+  position: absolute;
+  inset: 0;
+  background: #05070f;
+  color: #e0e0e0;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", sans-serif;
+  cursor: default;
+  z-index: 3;
+}
+
+#credits .credits-header {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+}
+
+#credits-back {
+  border: 2px solid #2a3a66;
+  border-radius: calc(var(--u, 1px) * 10);
+  background: #0f1830;
+  color: #e0e0e0;
+}
+
+#credits .credits-title {
+  position: absolute;
+  left: 33.3333%;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-right: calc(var(--u, 1px) * 40);
+  font-size: max(14px, calc(var(--u, 1px) * 28));
+  font-weight: bold;
+}
+
+#credits-scroll {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  /* 本文は上下になぞって動かす（body の touch-action: none を上書きする） */
+  touch-action: pan-y;
+  padding: calc(var(--u, 1px) * 28) calc(var(--u, 1px) * 16) calc(var(--u, 1px) * 40);
+  box-sizing: border-box;
+  text-align: center;
+}
+
+#credits .credits-roles {
+  margin: 0;
+}
+
+#credits .credits-role {
+  font-size: max(10px, calc(var(--u, 1px) * 16));
+  color: #8a93a6;
+  letter-spacing: 0.12em;
+}
+
+#credits .credits-name {
+  margin: calc(var(--u, 1px) * 4) 0 calc(var(--u, 1px) * 32);
+  font-size: max(14px, calc(var(--u, 1px) * 24));
+  font-weight: bold;
+}
+
+#credits .credits-section {
+  margin: calc(var(--u, 1px) * 8) 0 calc(var(--u, 1px) * 16);
+  font-size: max(10px, calc(var(--u, 1px) * 16));
+  font-weight: normal;
+  color: #ffb347;
+}
+
+#credits .credits-tool {
+  margin: 0 calc(var(--u, 1px) * 8) calc(var(--u, 1px) * 12);
+  font-size: max(10px, calc(var(--u, 1px) * 14));
+  text-align: left;
+}
+
+#credits .credits-mit {
+  margin: calc(var(--u, 1px) * 16) calc(var(--u, 1px) * 8) 0;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: max(9px, calc(var(--u, 1px) * 12));
+  color: #8a93a6;
+  text-align: left;
+}
+
+#credits .credits-mit p {
+  margin: 0 0 1em;
+}

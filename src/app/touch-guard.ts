@@ -3,10 +3,11 @@
  * - 長押しの虫めがね・メニュー、2 回タップの拡大：touchstart の既定の動きを止める（CSS だけでは止まらない）
  * - 2 本指の拡大：gesturestart を止める（user-scalable=no でも拡大できるため）
  * - スクロール：少しでも残ると押せる位置がずれるので、0 に戻す
- * ボタン・入力欄・リンクの上は止めない（止めると押せなくなる。更新のボタンは LLM-PBI-0012）。
+ * ボタン・入力欄・リンク・動かせる本文の上は止めない（止めると押せない・動かせない。更新のボタンは LLM-PBI-0012、クレジットは LLM-PBI-0013）。
  * タッチの Pointer Events（撃つ操作）は touchstart より先に届くので、止めても撃てる。
  */
-const INTERACTIVE = 'button, input, textarea, select, a, label';
+// data-scroll はクレジット画面の本文（上下になぞって動かす。LLM-PBI-0013）
+const INTERACTIVE = 'button, input, textarea, select, a, label, [data-scroll]';
 
 /** この要素の上のタッチは、ブラウザの既定の動きのままにするか */
 export function isInteractive(target: EventTarget | null): boolean {

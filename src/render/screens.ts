@@ -3,8 +3,8 @@ import { formatScore } from './hud';
 import { RESTART_DELAY_STEPS, type OverlayText } from './overlay';
 import { STEPS_PER_SECOND } from '../core/config';
 
-/** 今の画面（LLM-GUI-0003 §0）。name は名前の入力（LLM-PBI-0007） */
-export type Screen = 'title' | 'play' | 'name' | 'top10';
+/** 今の画面（LLM-GUI-0003 §0）。name は名前の入力（LLM-PBI-0007）、credits はクレジット（LLM-PBI-0013） */
+export type Screen = 'title' | 'play' | 'name' | 'top10' | 'credits';
 
 /** どの画面も、出てから約 1 秒は触る・押すを受け付けない（前の画面の操作で飛ばないように。GUI-0003 §0） */
 export const SCREEN_INPUT_DELAY_STEPS = RESTART_DELAY_STEPS;

@@ -6,6 +6,8 @@ import { watchLayout } from './app/layout';
 import { startLoop } from './app/loop';
 import { setupPwa } from './app/pwa';
 import { bannerVisible } from './app/update';
+import { creditButtonVisible } from './app/credits';
+import { createCredits } from './app/credits-screen';
 import { createUpdateBanner } from './app/update-banner';
 import { guardTouch, isInteractive } from './app/touch-guard';
 import { formatVersion } from './app/version';
@@ -19,7 +21,7 @@ import { createNameEntry } from './app/name-entry';
 import { EMPTY_NAME, finalName, isValidName } from './core/name';
 import { loadRanking, rankingKey, saveRanking, type KeyValueStorage } from './storage/ranking-store';
 
-// 組み立て（ここだけが全部の層を知る）。画面の流れ：タイトル → プレイ → 終わり → TOP10 → タイトル（LLM-GUI-0003 §0）
+// 組み立て（ここだけが全部の層を知る）。画面の流れ：タイトル → プレイ → 終わり → TOP10 → タイトル、タイトル ⇄ クレジット（LLM-GUI-0003 §0）
 const versionText = formatVersion(__APP_VERSION__, __APP_CHANNEL__, __APP_COMMIT__);
 const body = document.body;
 body.dataset.version = versionText;
@@ -113,6 +115,19 @@ const onNeedRefresh = () => {
   refreshBanner();
 };
 
+// クレジット（LLM-PBI-0013・GUI-0003 §7）。ボタンはタイトルにだけ出し、タイトルが出てから約 1 秒は受け付けない
+const credits = createCredits(stage, {
+  onOpen: () => {
+    goTo('credits');
+    draw();
+  },
+  onBack: () => {
+    goTo('title');
+    draw();
+  },
+  canOpen: () => screen === 'title' && canLeaveScreen(screenStep),
+});
+
 /** 画面を切り替える。前の画面の操作が次の画面の 1 発にならないよう、たまった入力は捨てる */
 const goTo = (next: Screen) => {
   screen = next;
@@ -122,6 +137,8 @@ const goTo = (next: Screen) => {
   // 名前の入力欄は、名前の画面のときだけ出す。触った操作の中で出すので、iPhone でもキーボードが出る
   if (next === 'name') nameEntry.show();
   else nameEntry.hide();
+  credits.setButtonVisible(creditButtonVisible(next));
+  credits.setScreenVisible(next === 'credits');
   refreshBanner();
 };
 
@@ -147,6 +164,7 @@ const advanceBy = (steps: number, given?: StepInput) => {
 const screenTexts = () => {
   if (screen === 'title') return titleTexts(ranking, screenStep);
   if (screen === 'name') return nameTexts(lastRank ?? 0, state.score);
+  if (screen === 'credits') return []; // クレジットは HTML の画面がゲーム画面をすべて覆う
   return top10Texts(ranking, state.score, screenStep, lastRank);
 };
 
@@ -175,7 +193,8 @@ const draw = () => {
  * 名前の画面では何もしない（確定は Enter・OK だけ。入力欄の外を触ってもキーボードが閉じるだけ）
  */
 const poke = (): boolean => {
-  if (screen === 'name') return false;
+  // 名前の画面・クレジットでは何もしない（クレジットから出るのは BACK と Esc だけ）
+  if (screen === 'name' || screen === 'credits') return false;
   if (screen === 'play') {
     if (!canRestart(state.wave)) return false;
     recordIfOver();
@@ -199,6 +218,14 @@ window.addEventListener('mousedown', (e) => {
 });
 window.addEventListener('keydown', (e) => {
   if (e.target instanceof HTMLInputElement) return;
+  // クレジットは Esc でタイトルに戻る。ほかのキーでは何もしない（LLM-TC-0013-03）
+  if (screen === 'credits') {
+    if (e.key === 'Escape') {
+      goTo('title');
+      draw();
+    }
+    return;
+  }
   if (poke()) return;
   // 実機確認用：G キーでその場で GAME OVER にする（`?debug=1` のときだけ。PO の決定、スプリント 04）
   if (debug && screen === 'play' && e.code === 'KeyG' && !isOver(state.wave.status)) {
@@ -212,6 +239,7 @@ watchLayout(stage, canvas, (layout, dpr) => {
   body.dataset.scale = layout.scale.toFixed(4);
   nameEntry.setScale(layout.scale);
   banner.setScale(layout.scale);
+  credits.setScale(layout.scale);
   draw();
 });
 
