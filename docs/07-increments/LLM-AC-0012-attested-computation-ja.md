@@ -2,7 +2,7 @@
 id: LLM-AC-0012
 type: attested-computation
 title: ホーム画面のアプリが「更新」ボタンで新しい版になり、起動に失敗しても戻せる
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-18
 sources:
@@ -11,7 +11,7 @@ sources:
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0041（スプリント 11。PR #75）
   - LLM-TASK-0042（スプリント 11。PR #76）
-verified: null
+verified: { by: オーナー, at: 2026-11-18T12:10:17+09:00 }
 ---
 
 # LLM-AC-0012 インクリメントの実施記録
