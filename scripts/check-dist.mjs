@@ -5,6 +5,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, relative } from 'node:path';
 import { CHANNELS, resolveChannel } from '../channels.mjs';
+import { FORBIDDEN_WORDS } from './forbidden-words.mjs';
 // クレジットのデータは画面と同じものを使う（Node 24 は .ts の型を外して読める）
 import { CREDIT_ROLES, MIT_LICENSE_TEXT, THIRD_PARTY } from '../src/app/credits.ts';
 
@@ -20,8 +21,7 @@ const config = CHANNELS[channel];
 const TEXT_EXT = new Set(['.html', '.js', '.css', '.json', '.webmanifest', '.svg', '.txt', '.mjs']);
 // 通信しない文字列・自分の公開先だけを許す
 const ALLOWED_URL_PREFIXES = ['http://www.w3.org/', 'https://tsuku3dayo.github.io/', 'https://bit.ly/wb-precache'];
-// 原作の名前・ロゴの文字（LLM-IDK-0001 心配ごと②）
-const FORBIDDEN_WORDS = [/missile\s*command/i, /ミサイル\s*コマンド/, /\batari\b/i, /アタリ社/];
+// 原作の名前・ロゴの文字（LLM-IDK-0001 心配ごと②）は scripts/forbidden-words.mjs
 
 const errors = [];
 const walk = (d) => readdirSync(d).flatMap((n) => {
