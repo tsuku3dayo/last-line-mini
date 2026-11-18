@@ -1,10 +1,12 @@
 // build したもの（dist）の検査。テンプレート §6.3 ＋ 原作の名前が入っていないこと（完成の定義）。
 // LLM-TC-9001-03（base・外部の URL・原作の名前）、LLM-TC-9001-04（チャンネルごとの名前・アイコン・キャッシュ名）、
-// LLM-TC-9001-05（本番の SW はプレビューを扱わない）
+// LLM-TC-9001-05（本番の SW はプレビューを扱わない）、LLM-TC-0013-04（クレジットと外の道具の権利の表記）
 // 使い方：node scripts/check-dist.mjs [--channel production|preview] [--dir dist]
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, relative } from 'node:path';
 import { CHANNELS, resolveChannel } from '../channels.mjs';
+// クレジットのデータは画面と同じものを使う（Node 24 は .ts の型を外して読める）
+import { CREDIT_ROLES, MIT_LICENSE_TEXT, THIRD_PARTY } from '../src/app/credits.ts';
 
 const args = process.argv.slice(2);
 const argValue = (name) => {
@@ -82,6 +84,23 @@ if (!existsSync(swPath)) {
   // 本番の SW はプレビューのページを扱わない（LLM-SA-0001 §2）
   if (channel === 'production' && !sw.includes('\\/preview\\/')) errors.push('本番の sw.js の navigateFallbackDenylist に /preview/ がない');
 }
+
+// クレジット（LLM-TC-0013-04）：役割と名前・外の道具の名前と著作権の行・MIT License の本文が、アプリの JS に入っている。
+// どの道具が dist に入るかとクレジットとの突き合わせは build のとき（vite.config.ts の third-party-credits）。
+// Service Worker（sw.js・workbox-*.js）の中の Workbox は build の突き合わせに出てこないので、ここで Workbox が載っていることを見る
+const appJs = walk(join(dir, 'assets')).filter((f) => extname(f) === '.js').map((f) => readFileSync(f, 'utf8')).join('\n');
+const creditTexts = [
+  ...CREDIT_ROLES.flatMap((c) => [c.role, c.name]),
+  ...THIRD_PARTY.flatMap((t) => [t.name, t.license, t.copyright]),
+  // 本文は引用符（"Software" など）が JS の書き方で変わることがあるので、引用符のない段落と最初の文の頭で見る
+  MIT_LICENSE_TEXT[1],
+  MIT_LICENSE_TEXT[0].slice(0, 60),
+];
+for (const text of creditTexts) {
+  if (!appJs.includes(text)) errors.push(`アプリの JS にクレジットの文がない: ${text}`);
+}
+const usesWorkbox = readdirSync(dir).some((n) => /^workbox-.*\.js$/.test(n)) || (existsSync(swPath) && readFileSync(swPath, 'utf8').includes('workbox'));
+if (usesWorkbox && !THIRD_PARTY.some((t) => t.packages.includes('workbox-core'))) errors.push('Service Worker に Workbox が入るのに、クレジットに workbox-core がない');
 
 for (const file of walk(dir)) {
   if (!TEXT_EXT.has(extname(file))) continue;

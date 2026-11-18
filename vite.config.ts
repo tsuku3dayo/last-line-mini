@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vitest/config';
 import { CHANNELS, resolveChannel } from './channels.mjs';
+import { packageOfModuleId, uncreditedPackages } from './src/app/credits.ts';
 
 const channel = resolveChannel(process.env.APP_CHANNEL);
 const config = CHANNELS[channel];
@@ -42,6 +43,25 @@ export default defineConfig({
           .replaceAll('%BOOT_SRC%', `${config.base}boot.js`)
           .replaceAll('%APP_ID%', config.appId)
           .replaceAll('%APP_BASE%', config.base),
+    },
+    {
+      // 公開する版に入る外の道具（npm のパッケージ）が、すべてクレジットに載っているか（LLM-TC-0013-04。MIT の条件）。
+      // 載っていない道具が入ったら build を止める（クレジット・README を直す）
+      name: 'third-party-credits',
+      apply: 'build',
+      generateBundle(_options, bundle) {
+        const root = process.cwd();
+        const found: string[] = [];
+        for (const chunk of Object.values(bundle)) {
+          if (chunk.type !== 'chunk') continue;
+          for (const id of Object.keys(chunk.modules)) {
+            const pkg = packageOfModuleId(id, root);
+            if (pkg !== null) found.push(pkg);
+          }
+        }
+        const missing = uncreditedPackages(found);
+        if (missing.length > 0) this.error(`クレジット（src/app/credits.ts の THIRD_PARTY）に載っていない道具が dist に入る: ${missing.join(', ')}`);
+      },
     },
     VitePWA({
       registerType: 'prompt', // 勝手に切り替えない（更新ボタンは LLM-PBI-0012）
