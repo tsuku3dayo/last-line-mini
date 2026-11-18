@@ -2,7 +2,7 @@
 id: LLM-AC-0013
 type: attested-computation
 title: README と権利・クレジットの表記がある
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-18
 sources:
@@ -11,7 +11,7 @@ sources:
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0044（スプリント 12。PR #82）
   - LLM-TASK-0045（スプリント 12。PR #83）
-verified: null
+verified: { by: オーナー, at: 2026-11-18T17:49:20+09:00 }
 ---
 
 # LLM-AC-0013 インクリメントの実施記録
