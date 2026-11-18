@@ -100,6 +100,46 @@ body {
   appearance: none;
 }
 
+/* 更新の帯（LLM-GUI-0003 §5。LLM-PBI-0012）。位置と大きさは src/app/update-banner.ts が割合で決める */
+#update-banner {
+  position: absolute;
+  box-sizing: border-box;
+  background: #05070f;
+  border-bottom: 2px solid #6cff8a;
+  color: #e0e0e0;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", sans-serif;
+  cursor: default;
+  z-index: 2;
+}
+
+#update-banner[hidden] {
+  display: none;
+}
+
+#update-text {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+
+#update-button {
+  position: absolute;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 2px solid #6cff8a;
+  border-radius: 0;
+  background: #05070f;
+  color: #6cff8a;
+  font-family: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+}
+
 /* 版：ゲーム画面の右下の隅（LLM-GUI-0001 §1） */
 #app-version {
   position: absolute;

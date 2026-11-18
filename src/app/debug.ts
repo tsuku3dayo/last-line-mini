@@ -33,6 +33,8 @@ export interface DebugApi {
   unfreeze(): void;
   /** 止めたまま、決まった入力で steps ステップ進める */
   advance(steps: number, input?: StepInput): GameState;
+  /** 新しい版を見つけたことにする（更新の帯を出す。「更新」は読み込み直さず data-update-applied を数える。テンプレート §5.10） */
+  simulateUpdate(): void;
 }
 
 declare global {

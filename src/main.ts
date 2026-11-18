@@ -5,6 +5,8 @@ import { createInput } from './app/input';
 import { watchLayout } from './app/layout';
 import { startLoop } from './app/loop';
 import { setupPwa } from './app/pwa';
+import { bannerVisible } from './app/update';
+import { createUpdateBanner } from './app/update-banner';
 import { guardTouch, isInteractive } from './app/touch-guard';
 import { formatVersion } from './app/version';
 import { createGame, forceGameOver, step, type GameState, type StepInput } from './core/game';
@@ -96,6 +98,21 @@ const nameEntry = createNameEntry(
   () => canLeaveScreen(screenStep),
 );
 
+// 更新の帯（LLM-PBI-0012・GUI-0003 §5）。新しい版を見つけたら覚えておき、タイトルと TOP10 の画面のときだけ出す
+let updateWaiting = false;
+/** 「更新」で呼ぶもの。SW を登録したら差し替える（`?debug=1` の simulateUpdate では数えるだけの偽物） */
+let applyUpdate = () => {};
+const banner = createUpdateBanner(stage, () => applyUpdate());
+const refreshBanner = () => {
+  const visible = bannerVisible(screen, updateWaiting);
+  banner.setVisible(visible);
+  body.dataset.update = visible ? 'shown' : updateWaiting ? 'waiting' : 'none';
+};
+const onNeedRefresh = () => {
+  updateWaiting = true;
+  refreshBanner();
+};
+
 /** 画面を切り替える。前の画面の操作が次の画面の 1 発にならないよう、たまった入力は捨てる */
 const goTo = (next: Screen) => {
   screen = next;
@@ -105,6 +122,7 @@ const goTo = (next: Screen) => {
   // 名前の入力欄は、名前の画面のときだけ出す。触った操作の中で出すので、iPhone でもキーボードが出る
   if (next === 'name') nameEntry.show();
   else nameEntry.hide();
+  refreshBanner();
 };
 
 /** タイトルから WAVE 1 を始める。新しい乱数の種で（`?debug=1&seed=` のときは同じ種） */
@@ -193,11 +211,14 @@ watchLayout(stage, canvas, (layout, dpr) => {
   transform = { scale: layout.scale, dpr };
   body.dataset.scale = layout.scale.toFixed(4);
   nameEntry.setScale(layout.scale);
+  banner.setScale(layout.scale);
   draw();
 });
 
 goTo('title');
 const loop = startLoop((steps) => advanceBy(steps), draw);
+
+applyUpdate = setupPwa(onNeedRefresh).applyUpdate;
 
 if (debug) {
   exposeDebugApi({
@@ -221,9 +242,14 @@ if (debug) {
       draw();
       return s;
     },
+    simulateUpdate: () => {
+      // 本物の切り替え（読み込み直し）の代わりに、押された回数を数える（E2E が読む）
+      applyUpdate = () => {
+        body.dataset.updateApplied = String(Number(body.dataset.updateApplied ?? '0') + 1);
+      };
+      onNeedRefresh();
+    },
   });
   body.dataset.debug = '1';
   showFps(stage);
 }
-
-setupPwa();
