@@ -2,7 +2,7 @@
 id: LLM-TC-0021
 type: test-case
 title: 空の敵が落とす弾の位置と速さが毎回変わる
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-19
 sources:
