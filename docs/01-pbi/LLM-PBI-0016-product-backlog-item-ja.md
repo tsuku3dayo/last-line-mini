@@ -7,7 +7,7 @@ status: draft
 version: 0.2
 updated: 2026-11-19
 sources:
-  - LLM-PG-0002（v1.1）
+  - LLM-PG-0002（v1.2）
   - docs/spec/last-line-mini-spec.md (v1.3) —
 verified: null
 ---

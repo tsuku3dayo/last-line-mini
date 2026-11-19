@@ -7,7 +7,7 @@ status: draft
 version: 0.1
 updated: 2026-11-19
 sources:
-  - LLM-PG-0002（v1.1）
+  - LLM-PG-0002（v1.2）
   - LLM-PBI-0009（v1.0）
 verified: null
 ---
