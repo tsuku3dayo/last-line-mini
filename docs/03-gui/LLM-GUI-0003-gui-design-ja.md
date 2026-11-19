@@ -11,7 +11,7 @@ sources:
   - LLM-PBI-0020（v1.0）
   - LLM-PBI-0012（v1.0）
   - LLM-PBI-0013（v1.0）
-  - LLM-GUI-0001（v1.8）
+  - LLM-GUI-0001（v1.9）
   - LLM-GUI-0002（v1.0）
   - docs/spec/last-line-mini-spec.md (v1.3) §2.1・§5.1・§6.2
 verified: { by: オーナー, at: 2026-11-18T17:08:37+09:00 }
