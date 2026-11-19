@@ -2,7 +2,7 @@
 id: LLM-AC-0009
 type: attested-computation
 title: 爆撃機と衛星が横切ってミサイルを落とす
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-19
 sources:
@@ -11,12 +11,12 @@ sources:
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0047（スプリント 13。PR #90）
   - LLM-TASK-0048（スプリント 13。PR #91）
-verified: null
+verified: { by: オーナー, at: 2026-11-19T15:12:54+09:00 }
 ---
 
 # LLM-AC-0009 インクリメントの実施記録
 
-LLM-PBI-0009 が完成の定義（`docs/definition-of-done.md`）を満たしたことの記録。スプリント 13 のスプリントレビューで PO の受け入れを受ける。
+LLM-PBI-0009 が完成の定義（`docs/definition-of-done.md`）を満たしたことの記録。スプリント 13 のスプリントレビュー（2026-11-19 15:12:54）で PO が受け入れた。
 
 - 対象の版：プレビュー `v1.0.0 β d33efab`（#91 のマージ `2a0c7b0` の公開が、#92〔文書だけ〕まで入った main を build した。コードは `2a0c7b0` と同じ）
 - 公開：GitHub Actions「Pages」run 44467863309（success、2026-11-19 14:54:59 ごろに終わり）→ https://tsuku3dayo.github.io/last-line-mini/preview/ 。番号は公開が終わったあとに読み取った（OPTION 6.5 v1.10。案 19）
