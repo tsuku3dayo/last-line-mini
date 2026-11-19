@@ -7,7 +7,7 @@ status: stable
 version: 1.0
 updated: 2026-11-19
 sources:
-  - LLM-PG-0002（v1.2）
+  - LLM-PG-0002（v1.3）
   - LLM-PBI-0009（v1.0）
 verified: { by: オーナー, at: 2026-11-19T16:25:18+09:00 }
 ---

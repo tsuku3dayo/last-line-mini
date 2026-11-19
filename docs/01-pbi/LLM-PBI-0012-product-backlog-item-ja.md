@@ -8,7 +8,7 @@ version: 1.0
 updated: 2026-11-18
 sources:
   - LLM-PG-0001（v1.2）
-  - LLM-IDK-0001（v1.5）問い 4・心配ごと⑦
+  - LLM-IDK-0001（v1.6）問い 4・心配ごと⑦
   - docs/spec/ARCHITECTURE-TEMPLATE.md §5.9・§5.10・§6.2・§6.3
   - LLM-SA-0001（v1.0）§2
   - LLM-GUI-0003（v1.4）§5・§6
