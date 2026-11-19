@@ -53,10 +53,10 @@ describe('固定ステップと決定性', () => {
 });
 
 describe('地形・基地・都市（LLM-GUI-0001 §1）', () => {
-  it('LLM-TC-9001-12 最初の状態：基地 3 つ（各 10 発）・都市 6 つが決まった位置にある', () => {
+  it('LLM-TC-9001-12 最初の状態：基地 3 つ（各 15 発。LLM-PBI-0009）・都市 6 つが決まった位置にある', () => {
     const s = createGame(1);
     expect(s.bases.map((b) => b.x)).toEqual([40, 240, 440]);
-    expect(s.bases.every((b) => b.ammo === AMMO_PER_BASE && AMMO_PER_BASE === 10)).toBe(true);
+    expect(s.bases.every((b) => b.ammo === AMMO_PER_BASE && AMMO_PER_BASE === 15)).toBe(true);
     expect(s.cities.map((c) => c.x)).toEqual([100, 140, 180, 300, 340, 380]);
     expect(s.cities.every((c) => c.alive)).toBe(true);
   });

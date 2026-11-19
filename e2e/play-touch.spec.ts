@@ -29,7 +29,7 @@ test('LLM-TC-0002-01 ゲーム画面を触ると、触った所へ、いちば�
   expect(Math.abs((s.interceptors[0]?.toX ?? 0) - 400)).toBeLessThanOrEqual(1);
   expect(Math.abs((s.interceptors[0]?.toY ?? 0) - 200)).toBeLessThanOrEqual(1);
   expect(Math.abs(s.cursor.x - 400)).toBeLessThanOrEqual(1);
-  await expect(page.locator('body')).toHaveAttribute('data-ammo', '10,10,9');
+  await expect(page.locator('body')).toHaveAttribute('data-ammo', '15,15,14');
 });
 
 test('LLM-TC-0002-04 縦の画面に、ゲーム画面の全体が欠けずに 1 画面に収まる', async ({ page }) => {
@@ -79,8 +79,8 @@ test('LLM-TC-0002-03 1 回触ると 1 発だけ撃つ', async ({ page }) => {
   await page.touchscreen.tap(p.x, p.y);
   await advance(page, 1);
   await advance(page, 10); // 触っていないステップでは撃たない
-  await expect(page.locator('body')).toHaveAttribute('data-ammo', '9,10,10');
+  await expect(page.locator('body')).toHaveAttribute('data-ammo', '14,15,15');
   await page.touchscreen.tap(p.x, p.y);
   await advance(page, 1);
-  await expect(page.locator('body')).toHaveAttribute('data-ammo', '8,10,10');
+  await expect(page.locator('body')).toHaveAttribute('data-ammo', '13,15,15');
 });

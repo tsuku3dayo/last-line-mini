@@ -18,7 +18,7 @@ describe('タッチ：触った所へ、いちばん近い基地から撃つ（L
       expect(s.interceptors).toHaveLength(1);
       expect(s.interceptors[0]).toMatchObject({ base, toX: x, toY: 200 });
       expect(s.cursor).toMatchObject({ x, y: 200, vx: 0, vy: 0 });
-      expect(ammo(s)[base]).toBe(9);
+      expect(ammo(s)[base]).toBe(14); // 15 発から 1 減る（LLM-PBI-0009）
     }
   });
 
@@ -52,14 +52,14 @@ describe('タッチ：触った所へ、いちばん近い基地から撃つ（L
   it('LLM-TC-0002-03 触ったステップだけ 1 発撃つ（触っていないステップでは撃たない）', () => {
     const s1 = step(createGame(1), tap({ x: 240, y: 200 }));
     const s2 = step(s1, NO_INPUT);
-    expect(ammo(s2)).toEqual([10, 9, 10]);
+    expect(ammo(s2)).toEqual([15, 14, 15]);
     expect(s2.interceptors).toHaveLength(1);
   });
 
   it('LLM-TC-0002-03 同じステップに 2 か所触ると、それぞれの場所へ 1 発ずつ撃つ（残弾は 1 発ずつ順に数える）', () => {
     const s = step(createGame(1), tap({ x: 60, y: 200 }, { x: 420, y: 300 }));
     expect(s.interceptors.map((m) => [m.base, m.toX, m.toY])).toEqual([[0, 60, 200], [2, 420, 300]]);
-    expect(ammo(s)).toEqual([9, 10, 9]);
+    expect(ammo(s)).toEqual([14, 15, 14]);
     expect(s.cursor).toMatchObject({ x: 420, y: 300 }); // 照準は最後の点
 
     // 残り 1 発の基地の近くを 2 か所触ると、2 発目は次に近い基地から

@@ -50,8 +50,8 @@ test('LLM-TC-0004-03 LLM-TC-0004-06 LLM-TC-0006-04 CLEAR で「DEFENSE COMPLETE�
   });
   await advance(page, 1);
   await expect(body).toHaveAttribute('data-status', 'clear');
-  // 終わりの画面にはボーナスの内訳 2 行も出る（LLM-PBI-0005 で足した。弾は 30 発・都市 6 つのまま）
-  const breakdown = 'MISSILES 30 X 5    150|CITIES    6 X 100  600';
+  // 終わりの画面にはボーナスの内訳 2 行も出る（LLM-PBI-0005 で足した。弾は 45 発〔LLM-PBI-0009〕・都市 6 つのまま）
+  const breakdown = 'MISSILES 45 X 5    225|CITIES    6 X 100  600';
   await expect(body).toHaveAttribute('data-message', `DEFENSE COMPLETE|${breakdown}`);
 
   const box = await page.locator('#stage').boundingBox();
@@ -67,7 +67,7 @@ test('LLM-TC-0004-03 LLM-TC-0004-06 LLM-TC-0006-04 CLEAR で「DEFENSE COMPLETE�
   // LLM-PBI-0006 から：終わりのあとは TOP10 の画面（今回の点を YOUR SCORE で出す）→ タイトル → WAVE 1（GUI-0003 §0）
   // LLM-PBI-0007 から：TOP10 が空なのでランクインし、先に名前の入力（空のまま確定）
   await confirmName(page, isMobile);
-  await expect(body).toHaveAttribute('data-message', /\|YOUR SCORE 000750$/); // 弾 30 × 5 ＋ 都市 6 × 100
+  await expect(body).toHaveAttribute('data-message', /\|YOUR SCORE 000825$/); // 弾 45 × 5 ＋ 都市 6 × 100
   await poke(); // 出てから約 1 秒は受け付けない
   await expect(body).toHaveAttribute('data-screen', 'top10');
   await advance(page, 120);
@@ -79,7 +79,7 @@ test('LLM-TC-0004-03 LLM-TC-0004-06 LLM-TC-0006-04 CLEAR で「DEFENSE COMPLETE�
   await expect(body).toHaveAttribute('data-status', 'break');
   await expect(body).toHaveAttribute('data-wave', '1');
   await expect(body).toHaveAttribute('data-message', 'WAVE 1');
-  await expect(body).toHaveAttribute('data-ammo', '10,10,10'); // 画面を進める操作で撃っていない
+  await expect(body).toHaveAttribute('data-ammo', '15,15,15'); // 画面を進める操作で撃っていない
 });
 
 test('LLM-TC-0005-01 爆風で敵を壊すと data-score が 25 増え、地面に落ちた敵では増えない', async ({ page }) => {
@@ -159,7 +159,7 @@ test('LLM-TC-0005-04 やり直すと data-score は 0 から', async ({ page, is
   await expect(body).toHaveAttribute('data-score', '0');
 });
 
-test('LLM-TC-0004-02 WAVE 1 のあいだ → WAVE 1 → 敵がいなくなると WAVE 2 のあいだ → 弾が 10 発に戻って WAVE 2', async ({ page }) => {
+test('LLM-TC-0004-02 WAVE 1 のあいだ → WAVE 1 → 敵がいなくなると WAVE 2 のあいだ → 弾が 15 発に戻って WAVE 2', async ({ page }) => {
   await openFrozen(page);
   const body = page.locator('body');
   await expect(body).toHaveAttribute('data-wave', '1');
@@ -182,8 +182,8 @@ test('LLM-TC-0004-02 WAVE 1 のあいだ → WAVE 1 → 敵がいなくなると
   await advance(page, 1);
   await expect(body).toHaveAttribute('data-wave', '2');
   await expect(body).toHaveAttribute('data-status', 'break');
-  await expect(body).toHaveAttribute('data-ammo', '2,10,10');
+  await expect(body).toHaveAttribute('data-ammo', '2,15,15');
   await advance(page, BREAK_STEPS + 1);
   await expect(body).toHaveAttribute('data-status', 'playing');
-  await expect(body).toHaveAttribute('data-ammo', '10,10,10');
+  await expect(body).toHaveAttribute('data-ammo', '15,15,15');
 });

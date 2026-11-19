@@ -84,22 +84,22 @@ describe('迎撃ミサイル', () => {
     expect(center?.traveled).toBeCloseTo(CENTER_SPEED);
   });
 
-  it('LLM-TC-0001-05 各基地 10 発。撃つと 1 減り、0 の基地からは撃てない。ほかの基地には影響しない', () => {
+  it('LLM-TC-0001-05 各基地 15 発（LLM-PBI-0009 で 10 → 15）。撃つと 1 減り、0 の基地からは撃てない。ほかの基地には影響しない', () => {
     let s = createGame(1);
     expect(s.bases.map((b) => b.ammo)).toEqual([AMMO_PER_BASE, AMMO_PER_BASE, AMMO_PER_BASE]);
     for (let i = 0; i < AMMO_PER_BASE; i++) s = step(s, fireAt(100, 100, A));
-    expect(s.bases.map((b) => b.ammo)).toEqual([0, 10, 10]);
+    expect(s.bases.map((b) => b.ammo)).toEqual([0, 15, 15]);
     const fired = s.interceptors.length;
     s = step(s, fireAt(100, 100, A));
     expect(s.bases[0]?.ammo).toBe(0);
     expect(s.interceptors.length).toBeLessThanOrEqual(fired); // 増えない
     s = step(s, fireAt(100, 100, [true, true, true]));
-    expect(s.bases.map((b) => b.ammo)).toEqual([0, 9, 9]);
+    expect(s.bases.map((b) => b.ammo)).toEqual([0, 14, 14]);
   });
 
   it('LLM-TC-0001-05 同じステップで 3 つの基地から同時に撃てる', () => {
     const s = step(createGame(1), fireAt(240, 300, [true, true, true]));
     expect(s.interceptors.map((m) => m.base)).toEqual([0, 1, 2]);
-    expect(s.bases.map((b) => b.ammo)).toEqual([9, 9, 9]);
+    expect(s.bases.map((b) => b.ammo)).toEqual([14, 14, 14]);
   });
 });

@@ -7,7 +7,7 @@ export interface RankRecord {
   readonly score: number;
   /** 残った都市（0〜6） */
   readonly cities: number;
-  /** 残弾（0〜30） */
+  /** 残弾（0〜45。LLM-PBI-0009 で 1 基地 15 発） */
   readonly missiles: number;
   readonly status: 'CLEARED' | 'GAME_OVER';
   /** 記録した日時（ISO-8601） */

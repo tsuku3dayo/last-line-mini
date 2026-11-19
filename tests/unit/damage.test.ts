@@ -27,7 +27,7 @@ describe('都市と基地の被弾（LLM-PBI-0003）', () => {
   it('LLM-TC-0003-03 基地の台の幅（±14）に落ちると、その基地は壊れ、残弾が 0 になる', () => {
     const s = step(scene([landingAt(240 - BASE_HIT_HALF_WIDTH)]), NO_INPUT); // 基地 B の左のふち
     expect(alive(s).bases).toEqual([true, false, true]);
-    expect(s.bases.map((b) => b.ammo)).toEqual([10, 0, 10]);
+    expect(s.bases.map((b) => b.ammo)).toEqual([15, 0, 15]);
     expect(alive(s).cities.every(Boolean)).toBe(true);
   });
 

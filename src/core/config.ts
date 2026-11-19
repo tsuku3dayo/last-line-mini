@@ -9,9 +9,9 @@ export const STEP_MS = 1000 / STEPS_PER_SECOND;
 /** 1 回の描画で進める最大のステップ数（これを超えた遅れは捨てる） */
 export const MAX_STEPS_PER_FRAME = 12;
 
-/** 基地 A・B・C の x と、最初の弾の数 */
+/** 基地 A・B・C の x と、最初の弾の数（LLM-PBI-0009：PO の決定で 10 → 15。仕様書 §3.1 とは違う） */
 export const BASE_XS = [40, 240, 440] as const;
-export const AMMO_PER_BASE = 10;
+export const AMMO_PER_BASE = 15;
 /**
  * ウェーブごとの難しさ（LLM-PBI-0011：5 ウェーブ・後半ほど難しく・守り切って 2 分半〜3 分半）。
  * 4 つの表は同じ長さ（ウェーブの数）。実機で PO が確かめて値だけ直す（LLM-TC-0011-06）。
@@ -32,6 +32,19 @@ export const MIRV_MIN_CHILDREN = 2;
 export const MIRV_MAX_CHILDREN = 3;
 /** ウェーブのあいだ（「WAVE n」を出す時間）。始めの WAVE 1 の前にもある */
 export const WAVE_BREAK_STEPS = 3 * STEPS_PER_SECOND;
+
+/**
+ * 空の敵（LLM-PBI-0009）。ウェーブごとに出るもの（WAVE 1 は出ない）。
+ * 出るのは、そのウェーブの地上の敵の半分が出たとき。2 機目は AIRCRAFT_GAP_SECONDS あと
+ */
+export const WAVE_AIRCRAFT: readonly (readonly ('bomber' | 'satellite')[])[] = [[], ['bomber'], ['satellite'], ['bomber', 'satellite'], ['bomber', 'satellite']];
+export const AIRCRAFT_GAP_SECONDS = 4;
+/** 爆撃機：y の範囲・1 秒のドット・落とす数（道のりを等分した所で落とす）・当たりの四角（1.5 倍。LLM-GUI-0001 v1.9） */
+export const BOMBER = { minY: 100, maxY: 140, speed: 40, drops: 2, width: 36, height: 16 } as const;
+/** 衛星：y の範囲・1 秒のドット・落とす数・落とす間隔（秒）・当たりの四角 */
+export const SATELLITE = { minY: 50, maxY: 80, speed: 60, drops: 3, dropIntervalSeconds: 2.5, width: 33, height: 14 } as const;
+/** 空の敵を 1 つ壊したときの点（仕様書 §4.1） */
+export const SCORE_PER_AIRCRAFT = 100;
 
 /** 敵（アタックミサイル）を 1 つ壊したときの点。迎撃でも誘爆でも同じ（仕様書 §4.1・LLM-PBI-0005） */
 export const SCORE_PER_ENEMY = 25;

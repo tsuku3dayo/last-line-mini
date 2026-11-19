@@ -27,7 +27,7 @@ test('LLM-TC-0003-02 LLM-TC-0003-03 敵が落ちると都市と基地が壊れ�
   const s = await state(page);
   expect(s.cities.map((c) => c.alive)).toEqual([true, false, true, true, true, true]);
   expect(s.bases.map((b) => b.alive)).toEqual([true, false, true]);
-  await expect(page.locator('body')).toHaveAttribute('data-ammo', '10,0,10');
+  await expect(page.locator('body')).toHaveAttribute('data-ammo', '15,0,15');
 
   const box = await page.locator('#stage').boundingBox();
   if (!box) throw new Error('ゲーム画面がない');
@@ -39,5 +39,5 @@ test('LLM-TC-0003-02 LLM-TC-0003-03 敵が落ちると都市と基地が壊れ�
   const after = await state(page);
   expect(after.interceptors).toHaveLength(1);
   expect(after.interceptors[0]?.base).not.toBe(1);
-  await expect(page.locator('body')).toHaveAttribute('data-ammo', /^(9,0,10|10,0,9)$/); // B は 0 のまま
+  await expect(page.locator('body')).toHaveAttribute('data-ammo', /^(14,0,15|15,0,14)$/); // B は 0 のまま
 });

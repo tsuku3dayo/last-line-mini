@@ -1,5 +1,6 @@
 import { stepBlasts, type Blast } from './blast';
-import { AMMO_PER_BASE, BASE_XS, BONUS_PER_CITY, BONUS_PER_MISSILE, CITY_XS, SCORE_PER_ENEMY } from './config';
+import { launchAircraft, stepAircraft, type Aircraft } from './aircraft';
+import { AMMO_PER_BASE, BASE_XS, BONUS_PER_CITY, BONUS_PER_MISSILE, CITY_XS, SCORE_PER_AIRCRAFT, SCORE_PER_ENEMY } from './config';
 import { applyLandings } from './damage';
 import { allCitiesLost, cannotStop } from './end';
 import { INITIAL_CURSOR, stepCursor, type Cursor } from './cursor';
@@ -7,7 +8,7 @@ import { chooseBase, clampTap, type Point } from './touch';
 import { enemyHead, spawnEnemy, stepEnemies, stepImpacts, type EnemyMissile, type Impact } from './enemy';
 import { launch, stepInterceptors, type Interceptor } from './interceptor';
 import { seedState } from './random';
-import { beginStep, endStep, INITIAL_WAVE, isMirvSpawn, isOver, maySpawn, type WaveProgress } from './wave';
+import { aircraftPending, beginStep, dueAircraft, endStep, INITIAL_WAVE, isMirvSpawn, isOver, maySpawn, type WaveProgress } from './wave';
 
 export type { Point } from './touch';
 
@@ -35,6 +36,8 @@ export interface GameState {
   readonly interceptors: readonly Interceptor[];
   readonly blasts: readonly Blast[];
   readonly enemies: readonly EnemyMissile[];
+  /** 空の敵：爆撃機と衛星（LLM-PBI-0009） */
+  readonly aircraft: readonly Aircraft[];
   /** 敵が地面に着いた跡の閃光 */
   readonly impacts: readonly Impact[];
   /** ウェーブの進み具合（LLM-PBI-0004） */
@@ -82,6 +85,7 @@ export function createGame(seed: number): GameState {
     interceptors: [],
     blasts: [],
     enemies: [],
+    aircraft: [],
     impacts: [],
     wave: INITIAL_WAVE,
     score: 0,
@@ -125,7 +129,8 @@ function cursorAfterTaps(cursor: Cursor, taps: readonly Point[]): Cursor {
 
 /**
  * 1 ステップ進める。順番：ウェーブの始め（弾を戻す）→ 照準 → 発射（キー → 触った点）→ 迎撃ミサイル → 爆風 →
- * 敵が出る（ウェーブの数まで）→ 敵が動く（爆風で消える・地面に着く）→ 誘爆の爆風を足す → 落ちた所の都市・基地が壊れる → ウェーブの終わり
+ * 敵が出る（ウェーブの数まで）→ 敵が動く（爆風で消える・地面に着く）→ 空の敵が出る・動く・落とす（LLM-PBI-0009）→
+ * 誘爆の爆風を足す → 落ちた所の都市・基地が壊れる → ウェーブの終わり
  */
 export function step(state: GameState, input: StepInput): GameState {
   // GAME OVER のあとは、その場で止まる（敵も爆風も動かない）。経った時間だけ数える（終わりの表示に使う）
@@ -149,10 +154,15 @@ export function step(state: GameState, input: StepInput): GameState {
     ? spawnEnemy(begun.wave.phaseStep, state.rng, isMirvSpawn(begun.wave, begun.wave.spawned), begun.wave.number)
     : { enemy: null, rng: state.rng };
   const enemies = stepEnemies(spawned.enemy ? [...state.enemies, spawned.enemy] : state.enemies, blasts);
+  // 空の敵（LLM-PBI-0009）：出る時が来たら出し、横切らせ、弾を落とす。爆風に重なったら壊れる（100 点・誘爆）。
+  // 落とした弾は次のステップから動く（地上の敵の乱数は使わない）
+  const due = dueAircraft(begun.wave);
+  const air = stepAircraft([...(state.aircraft ?? []), ...due.plans.map(launchAircraft)], blasts, due.wave.number);
   const landedAt = enemies.landed.map((m) => ({ x: m.toX, y: m.toY, age: 0 }));
   // 誘爆（LLM-PBI-0003）：爆風で壊れた敵の弾頭の場所に、迎撃と同じ爆風を出す。
   // このステップの判定が終わってから足すので、次のステップから効く（1 ステップの中で連鎖が止まらなくなるのを防ぐ）
-  const chained = enemies.destroyed.map((m) => ({ ...enemyHead(m), age: 0 }));
+  const chained = [...enemies.destroyed.map((m) => ({ ...enemyHead(m), age: 0 })), ...air.destroyed.map((a) => ({ x: a.x, y: a.y, age: 0 }))];
+  const flyingEnemies = [...enemies.flying, ...air.drops];
   // 被弾（LLM-PBI-0003）：落ちた所の都市・基地が壊れる
   const damaged = applyLandings(state.cities, tapped.bases, enemies.landed.map((m) => enemyHead(m).x));
   const next: GameState = {
@@ -164,11 +174,14 @@ export function step(state: GameState, input: StepInput): GameState {
     rng: spawned.rng,
     interceptors: moved.flying,
     blasts: [...blasts, ...chained],
-    enemies: enemies.flying,
+    enemies: flyingEnemies,
+    aircraft: air.flying,
     impacts: [...stepImpacts(state.impacts), ...landedAt],
-    wave: endStep(begun.wave, spawned.enemy !== null, enemies.flying.length),
+    // 空の敵は、飛んでいるものもまだ出していないものも、いなくなるまでウェーブを終わらせない（LLM-TC-0009-05）
+    wave: endStep(due.wave, spawned.enemy !== null, flyingEnemies.length + air.flying.length + aircraftPending(due.wave)),
     // 点（LLM-PBI-0005）：爆風で壊れた敵 1 つにつき 25 点。迎撃・誘爆どちらの爆風でも destroyed に入る。地面に着いた敵（landed）は 0 点
-    score: state.score + SCORE_PER_ENEMY * enemies.destroyed.length,
+    // 空の敵は 1 つにつき 100 点（LLM-PBI-0009）
+    score: state.score + SCORE_PER_ENEMY * enemies.destroyed.length + SCORE_PER_AIRCRAFT * air.destroyed.length,
   };
   const judged = judgeEnd(next);
   // このステップで終わった（CLEAR か GAME OVER になった）ら、その瞬間にボーナスを足す
