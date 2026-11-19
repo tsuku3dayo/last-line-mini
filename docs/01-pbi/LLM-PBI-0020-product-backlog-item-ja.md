@@ -7,9 +7,9 @@ status: stable
 version: 1.0
 updated: 2026-11-12
 sources:
-  - LLM-PG-0001（v1.1）
+  - LLM-PG-0001（v1.2）
   - LLM-PBI-0007（v1.0）
-  - docs/spec/last-line-mini-spec.md (v1.2) §5.1・§5.2
+  - docs/spec/last-line-mini-spec.md (v1.3) §5.1・§5.2
   - LLM-GUI-0003（v1.3）
 verified: { by: オーナー, at: 2026-11-12T11:11:51+09:00 }
 ---

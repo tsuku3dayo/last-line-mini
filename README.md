@@ -81,4 +81,20 @@ npm run verify     # lint・単体テスト・build・dist の検査・文書の
 npm run test:e2e   # E2E（先に npm run build）
 ```
 
-開発の進め方と記録（プロダクトバックログ・スプリントの記録・設計）は `docs/` にあります。
+開発の進め方と記録（プロダクトバックログ・スプリントの記録・設計）は `docs/` にあります。同じゲームを作り直すための仕様は `docs/reproduction-specification.md` にまとめています。
+
+### ファイルの構成
+
+| 場所 | 中身 |
+| :--- | :--- |
+| `src/core/` | ゲームの決まり（ウェーブ・敵・迎撃・爆風・点・TOP10・名前）。画面やブラウザに触れない |
+| `src/render/` | 画面に描く（ゲーム画面・タイトル・TOP10・文字） |
+| `src/storage/` | TOP10 の保存と読み込み（ブラウザの localStorage） |
+| `src/app/` | 入力・画面の大きさ・名前の入力欄・更新の帯・クレジット画面・PWA |
+| `src/main.ts` | 全部を組み立てる |
+| `public/` | 起動の復旧（`boot.js`）とアイコン（本番・プレビュー） |
+| `channels.mjs` | 本番とプレビューの違い（URL・名前・色） |
+| `tests/unit/`・`e2e/` | 単体テストと E2E（ブラウザを動かすテスト） |
+| `scripts/` | 検査（dist・文書・README）・版を上げる・公開の build |
+| `.github/workflows/` | CI（PR ごとのテスト）と GitHub Pages への公開 |
+| `docs/` | プロダクトバックログ・設計・テストの文書・スプリントの記録・進め方 |
