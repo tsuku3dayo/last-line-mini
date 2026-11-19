@@ -66,16 +66,16 @@ test('LLM-TC-0001-03 LLM-TC-0019-01 左クリックで、近い中央の基地�
 test('LLM-TC-0001-05 LLM-TC-0019-01 左の基地の近くをクリックするたびに左の残弾が減り、0 になると次に近い中央から撃つ', async ({ page }) => {
   await openFrozen(page);
   await advance(page, 1);
-  await expect(page.locator('body')).toHaveAttribute('data-ammo', '10,10,10');
-  for (let i = 0; i < 10; i++) {
+  await expect(page.locator('body')).toHaveAttribute('data-ammo', '15,15,15'); // 1 基地 15 発（LLM-PBI-0009）
+  for (let i = 0; i < 15; i++) {
     await clickAt(page, 60, 200);
     await advance(page, 1);
   }
-  await expect(page.locator('body')).toHaveAttribute('data-ammo', '0,10,10');
+  await expect(page.locator('body')).toHaveAttribute('data-ammo', '0,15,15');
   // 左が 0 発：x 60 からいちばん近いのは中央（距離 180。右は 380）
   await clickAt(page, 60, 200);
   await advance(page, 1);
-  await expect(page.locator('body')).toHaveAttribute('data-ammo', '0,9,10');
+  await expect(page.locator('body')).toHaveAttribute('data-ammo', '0,14,15');
 });
 
 test('LLM-TC-0019-02 ゲーム画面の外のクリック、右クリック・真ん中のクリックでは撃たない', async ({ page }) => {
@@ -89,7 +89,7 @@ test('LLM-TC-0019-02 ゲーム画面の外のクリック、右クリック・�
   await clickAt(page, 240, 200, 'right');
   await clickAt(page, 240, 200, 'middle');
   await advance(page, 1);
-  await expect(page.locator('body')).toHaveAttribute('data-ammo', '10,10,10');
+  await expect(page.locator('body')).toHaveAttribute('data-ammo', '15,15,15');
   expect((await play(page)).interceptors).toHaveLength(0);
 });
 
@@ -105,7 +105,7 @@ test('LLM-TC-0019-03 方向キー・Z・X・C では、照準も動かず撃ち�
   for (const key of ['KeyZ', 'KeyX', 'KeyC']) await page.keyboard.press(key);
   await advance(page, 1);
   expect(await cursor(page)).toEqual(start);
-  await expect(page.locator('body')).toHaveAttribute('data-ammo', '10,10,10');
+  await expect(page.locator('body')).toHaveAttribute('data-ammo', '15,15,15');
   expect((await play(page)).interceptors).toHaveLength(0);
 });
 
@@ -117,7 +117,7 @@ test('LLM-TC-0019-04 画面を進めるクリック（タイトル・終わり�
   await clickAt(page, 240, 200);
   await expect(body).toHaveAttribute('data-screen', 'play');
   await advance(page, 1);
-  await expect(body).toHaveAttribute('data-ammo', '10,10,10');
+  await expect(body).toHaveAttribute('data-ammo', '15,15,15');
   expect((await play(page)).interceptors).toHaveLength(0);
   // その場で終わりにする（TOP10 が空なのでランクインし、名前の画面を通る）
   await page.evaluate(() => {
@@ -139,6 +139,6 @@ test('LLM-TC-0019-04 画面を進めるクリック（タイトル・終わり�
   await clickAt(page, 240, 200); // タイトル → WAVE 1
   await expect(body).toHaveAttribute('data-screen', 'play');
   await advance(page, 1);
-  await expect(body).toHaveAttribute('data-ammo', '10,10,10');
+  await expect(body).toHaveAttribute('data-ammo', '15,15,15');
   expect((await play(page)).interceptors).toHaveLength(0);
 });

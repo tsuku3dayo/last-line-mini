@@ -1,6 +1,7 @@
 import { AMMO_PER_BASE, GROUND_Y, STEPS_PER_SECOND, WAVE_BREAK_STEPS, WAVE_ENEMY_COUNTS, WAVE_MIRV_COUNTS } from './config';
 import { ENEMY_FIRST_SPAWN_STEP, enemySpeedRange, spawnIntervalSteps } from './enemy';
 import { nextRandom } from './random';
+import { aircraftPlan, type AircraftPlan } from './aircraft';
 
 /**
  * ゲームの場面（LLM-PBI-0004）。
@@ -24,6 +25,26 @@ export interface WaveProgress {
   readonly spawned: number;
   /** このウェーブで多弾頭になる番号（0 から）。ウェーブの始めに決める（LLM-TC-0011-04）。ないときは多弾頭なし */
   readonly mirvAt?: readonly number[];
+  /** このウェーブの空の敵の出方（LLM-PBI-0009）。ウェーブの始めに決める */
+  readonly airPlan?: readonly AircraftPlan[];
+  /** airPlan のうち、もう出した数 */
+  readonly airLaunched?: number;
+}
+
+/** まだ出していない空の敵の数（出し終えるまでウェーブは終わらない。LLM-TC-0009-05） */
+export const aircraftPending = (w: WaveProgress): number => (w.airPlan?.length ?? 0) - (w.airLaunched ?? 0);
+
+/** このステップで出す空の敵と、出したあとのウェーブ（ウェーブの中だけ。出す時は airPlan の atStep） */
+export function dueAircraft(w: WaveProgress): { plans: AircraftPlan[]; wave: WaveProgress } {
+  if (w.status !== 'playing' || !w.airPlan) return { plans: [], wave: w };
+  const plans: AircraftPlan[] = [];
+  let launched = w.airLaunched ?? 0;
+  while (launched < w.airPlan.length && (w.airPlan[launched]?.atStep ?? Infinity) <= w.phaseStep) {
+    const p = w.airPlan[launched];
+    if (p) plans.push(p);
+    launched += 1;
+  }
+  return plans.length === 0 ? { plans, wave: w } : { plans, wave: { ...w, airLaunched: launched } };
 }
 
 export const WAVE_COUNT = WAVE_ENEMY_COUNTS.length;
@@ -35,7 +56,7 @@ export const enemiesInWave = (n: number): number => WAVE_ENEMY_COUNTS[n - 1] ?? 
 
 /**
  * ステップの始め：ウェーブのあいだが終わったら、ウェーブを始める。
- * 始めるとき、壊れていない基地の弾を 10 発に戻す（壊れた基地は 0 のまま。PO の決定）。
+ * 始めるとき、壊れていない基地の弾を 15 発（AMMO_PER_BASE。LLM-PBI-0009）に戻す（壊れた基地は 0 のまま。PO の決定）。
  * 多弾頭の並びは、そのときの乱数の状態 rng から決める（LLM-TC-0011-04）
  */
 export function beginStep<B extends { readonly alive: boolean; readonly ammo: number }>(
@@ -45,7 +66,7 @@ export function beginStep<B extends { readonly alive: boolean; readonly ammo: nu
 ): { wave: WaveProgress; bases: readonly B[] } {
   if (w.status !== 'break' || w.phaseStep < WAVE_BREAK_STEPS) return { wave: w, bases };
   return {
-    wave: { number: w.number, status: 'playing', phaseStep: 0, spawned: 0, mirvAt: mirvPlan(w.number, rng) },
+    wave: { number: w.number, status: 'playing', phaseStep: 0, spawned: 0, mirvAt: mirvPlan(w.number, rng), airPlan: aircraftPlan(w.number, rng), airLaunched: 0 },
     bases: bases.map((b) => (b.alive ? { ...b, ammo: AMMO_PER_BASE } : b)),
   };
 }
@@ -55,6 +76,7 @@ export const maySpawn = (w: WaveProgress): boolean => w.status === 'playing' && 
 
 /**
  * ステップの終わり：ウェーブの敵をすべて出し終え、画面の敵がいなくなったら、次のウェーブのあいだへ。
+ * enemiesLeft には、空の敵（飛んでいるものと、まだ出していないもの）も入れて渡す（LLM-TC-0009-05）。
  * 最後のウェーブなら CLEAR。どの場面でも phaseStep を 1 進める
  */
 export function endStep(w: WaveProgress, spawnedNow: boolean, enemiesLeft: number): WaveProgress {

@@ -41,7 +41,8 @@ const isRecord = (isName: (name: string) => boolean) => (v: unknown): v is Store
     isName(r.name) &&
     isCount(r.score, Number.MAX_SAFE_INTEGER) &&
     isCount(r.cities, 6) &&
-    isCount(r.missiles, 30) &&
+    // 残弾は 15 発 × 3 基地まで（LLM-PBI-0009 で 10 → 15。今までの 0〜30 の記録もこの中）
+    isCount(r.missiles, 45) &&
     (r.status === 'CLEARED' || r.status === 'GAME_OVER') &&
     typeof r.createdAt === 'string'
   );

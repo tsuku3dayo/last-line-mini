@@ -95,7 +95,7 @@ describe('点数（LLM-PBI-0005）', () => {
 
   it('LLM-TC-0005-02 GAME OVER（都市がすべて壊れた）の瞬間は、都市 0 で残弾の分だけ足される', () => {
     const s = runUntilPlaying(createGame(1));
-    // 最後の都市（x=380）に落ちる直前の敵。基地は 10・10・10 発、点は 50
+    // 最後の都市（x=380）に落ちる直前の敵。基地は 15・15・15 発（LLM-PBI-0009）、点は 50
     const lastCity: GameState = {
       ...s,
       cities: s.cities.map((c) => ({ ...c, alive: c.x === 380 })),
@@ -104,15 +104,15 @@ describe('点数（LLM-PBI-0005）', () => {
     };
     const done = step(lastCity, NO_INPUT);
     expect(done.wave.status).toBe('gameover');
-    expect(done.bonus).toEqual({ missiles: 30, cities: 0 });
-    expect(done.score).toBe(50 + 30 * 5); // 200
-    expect(run(done, 10).score).toBe(200);
+    expect(done.bonus).toEqual({ missiles: 45, cities: 0 });
+    expect(done.score).toBe(50 + 45 * 5); // 275
+    expect(run(done, 10).score).toBe(275);
   });
 
   it('LLM-TC-0005-02 ?debug=1 の G キー（forceGameOver）でも同じくボーナスが足される', () => {
     const done = forceGameOver({ ...createGame(1), score: 25 });
-    expect(done.bonus).toEqual({ missiles: 30, cities: 6 });
-    expect(done.score).toBe(25 + 150 + 600);
+    expect(done.bonus).toEqual({ missiles: 45, cities: 6 });
+    expect(done.score).toBe(25 + 225 + 600);
   });
 
   it('LLM-TC-0005-04 やり直す（新しいゲーム）と 0 点から。TOP は 000000 のまま', () => {

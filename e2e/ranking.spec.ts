@@ -73,7 +73,7 @@ test('LLM-TC-0006-01 開くとタイトル画面：題字と TOP10 の 10 行。
   await expect(body).toHaveAttribute('data-screen', 'play');
   await expect(body).toHaveAttribute('data-wave', '1');
   await expect(body).toHaveAttribute('data-status', 'break');
-  await expect(body).toHaveAttribute('data-ammo', '10,10,10'); // 始める操作で撃っていない
+  await expect(body).toHaveAttribute('data-ammo', '15,15,15'); // 始める操作で撃っていない
 });
 
 test('LLM-TC-0006-04 LLM-TC-0006-06 ランクインした点が TOP10 の画面に入り、開き直しても残る', async ({ page, isMobile }) => {
