@@ -43,6 +43,13 @@ export const AIRCRAFT_GAP_SECONDS = 4;
 export const BOMBER = { minY: 100, maxY: 140, speed: 40, drops: 2, width: 36, height: 16 } as const;
 /** 衛星：y の範囲・1 秒のドット・落とす数・落とす間隔（秒）・当たりの四角 */
 export const SATELLITE = { minY: 50, maxY: 80, speed: 60, drops: 3, dropIntervalSeconds: 2.5, width: 33, height: 14 } as const;
+/**
+ * 落とす弾の乱数（LLM-PBI-0021）。爆撃機は道のりの 15〜85% の 2 か所（20% 以上あける）。
+ * 衛星は 1 発ごとに 1.5〜3.5 秒の間隔。画面から出る 0.5 秒前までに落とし終える（合計が長ければ縮める）。
+ * 速さは、そのウェーブの地上の敵と同じ範囲の乱数
+ */
+export const BOMBER_DROP = { minRatio: 0.15, maxRatio: 0.85, gapRatio: 0.2 } as const;
+export const SATELLITE_DROP = { minIntervalSeconds: 1.5, maxIntervalSeconds: 3.5, finishMarginSeconds: 0.5 } as const;
 /** 空の敵を 1 つ壊したときの点（仕様書 §4.1） */
 export const SCORE_PER_AIRCRAFT = 100;
 

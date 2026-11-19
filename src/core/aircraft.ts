@@ -1,7 +1,7 @@
 // 空の敵：爆撃機と衛星（LLM-PBI-0009、仕様書 §4.1）。
 // 地上の敵の乱数の並びは進めない（ウェーブの始めの乱数の状態から別の並びを作る。多弾頭の mirvPlan と同じ考え方）
 import { blastRadius, type Blast } from './blast';
-import { AIRCRAFT_GAP_SECONDS, BOMBER, LOGICAL_WIDTH, SATELLITE, STEPS_PER_SECOND, WAVE_AIRCRAFT, WAVE_ENEMY_COUNTS } from './config';
+import { AIRCRAFT_GAP_SECONDS, BOMBER, BOMBER_DROP, LOGICAL_WIDTH, SATELLITE, SATELLITE_DROP, STEPS_PER_SECOND, WAVE_AIRCRAFT, WAVE_ENEMY_COUNTS } from './config';
 import { ENEMY_FIRST_SPAWN_STEP, enemySpeedRange, spawnIntervalSteps, TARGETS, type EnemyMissile, type Target } from './enemy';
 import { nextRandom } from './random';
 
@@ -15,6 +15,14 @@ export interface AircraftPlan {
   readonly y: number;
   /** ウェーブが始まってから何ステップで出るか */
   readonly atStep: number;
+  /** 落とす時と速さ（LLM-PBI-0021。ないときは決まった落とし方） */
+  readonly drops?: readonly DropPlan[];
+}
+
+/** 1 発の落とし方：出てから何ステップで落とすか・弾の速さ（1 ステップあたり） */
+export interface DropPlan {
+  readonly atAge: number;
+  readonly speed: number;
 }
 
 /** 飛んでいる空の敵 */
@@ -28,6 +36,8 @@ export interface Aircraft {
   readonly age: number;
   /** もう落とした数 */
   readonly dropped: number;
+  /** 落とす時と速さ（LLM-PBI-0021。計画から出したものは必ず持つ。ないときは決まった落とし方） */
+  readonly drops?: readonly DropPlan[];
 }
 
 const spec = (kind: AircraftKind) => (kind === 'bomber' ? BOMBER : SATELLITE);
@@ -51,21 +61,55 @@ export function aircraftFirstStep(n: number): number {
   return ENEMY_FIRST_SPAWN_STEP + (half - 1) * spawnIntervalSteps(n);
 }
 
+/** 横切るのにかかるステップ数 */
+const crossingSteps = (kind: AircraftKind): number => aircraftPath(kind) / aircraftSpeed(kind);
+
+/**
+ * 落とす時と速さを乱数で決める（LLM-PBI-0021）。next は乱数を 1 つずつ取り出す関数。
+ * 爆撃機：道のりの 15〜85% の 2 か所（20% 以上あける）。衛星：1.5〜3.5 秒の間隔で 3 発（出る 0.5 秒前までに収める）。
+ * 速さ：そのウェーブの地上の敵と同じ範囲
+ */
+export function rollDrops(kind: AircraftKind, wave: number, next: () => number): DropPlan[] {
+  const range = enemySpeedRange(wave);
+  const speed = () => range.min + next() * (range.max - range.min);
+  if (kind === 'bomber') {
+    const { minRatio, maxRatio, gapRatio } = BOMBER_DROP;
+    const a = minRatio + next() * (maxRatio - gapRatio - minRatio);
+    const b = a + gapRatio + next() * (maxRatio - (a + gapRatio));
+    return [a, b].map((ratio) => ({ atAge: Math.round(ratio * crossingSteps(kind)), speed: speed() }));
+  }
+  const { minIntervalSeconds, maxIntervalSeconds, finishMarginSeconds } = SATELLITE_DROP;
+  const gaps = Array.from({ length: SATELLITE.drops }, () => (minIntervalSeconds + next() * (maxIntervalSeconds - minIntervalSeconds)) * STEPS_PER_SECOND);
+  const limit = crossingSteps(kind) - finishMarginSeconds * STEPS_PER_SECOND;
+  const total = gaps.reduce((s, g) => s + g, 0);
+  const k = total > limit ? limit / total : 1;
+  let at = 0;
+  return gaps.map((g) => {
+    at += g * k;
+    return { atAge: Math.round(at), speed: speed() };
+  });
+}
+
 /** ウェーブ n の空の敵の出方を、乱数の状態 rng から決める（同じ rng なら同じ。地上の敵の乱数は進めない） */
 export function aircraftPlan(n: number, rng: number): readonly AircraftPlan[] {
   const kinds = aircraftInWave(n);
   let state = (rng ^ 0x27d4eb2f ^ Math.imul(n, 0x85ebca6b)) >>> 0;
+  const next = () => {
+    const r = nextRandom(state);
+    state = r.state;
+    return r.value;
+  };
   const first = aircraftFirstStep(n);
   return kinds.map((kind, i) => {
-    const side = nextRandom(state);
-    const h = nextRandom(side.state);
-    state = h.state;
+    const side = next();
+    const h = next();
     const s = spec(kind);
     return {
       kind,
-      dir: side.value < 0.5 ? 1 : -1,
-      y: s.minY + h.value * (s.maxY - s.minY),
+      dir: side < 0.5 ? 1 : -1,
+      y: s.minY + h * (s.maxY - s.minY),
       atStep: first + Math.round(i * AIRCRAFT_GAP_SECONDS * STEPS_PER_SECOND),
+      drops: rollDrops(kind, n, next),
     };
   });
 }
@@ -73,8 +117,18 @@ export function aircraftPlan(n: number, rng: number): readonly AircraftPlan[] {
 /** 計画から機体を出す：画面の外（機体の半分の幅だけ外）から */
 export function launchAircraft(p: AircraftPlan): Aircraft {
   const half = spec(p.kind).width / 2;
-  return { kind: p.kind, dir: p.dir, x: p.dir === 1 ? -half : LOGICAL_WIDTH + half, y: p.y, age: 0, dropped: 0 };
+  const a: Aircraft = { kind: p.kind, dir: p.dir, x: p.dir === 1 ? -half : LOGICAL_WIDTH + half, y: p.y, age: 0, dropped: 0 };
+  return p.drops ? { ...a, drops: p.drops } : a;
 }
+
+/** この機体の、age ステップまでに落としているはずの数（落とし方を持っていればそれ、なければ決まった落とし方） */
+export function dueDrops(a: Aircraft, age: number): number {
+  if (a.drops) return a.drops.filter((d) => d.atAge <= age).length;
+  return dropsDue(a.kind, age);
+}
+
+/** 落とす数（落とし方を持っていればその数） */
+export const totalDrops = (a: Aircraft): number => a.drops?.length ?? aircraftDrops(a.kind);
 
 /** 横切った道のり */
 const traveled = (a: Aircraft): number => a.age * aircraftSpeed(a.kind);
@@ -99,11 +153,15 @@ export function targetBelow(x: number): Target {
   return best;
 }
 
-/** 落とす弾：機体の下の端から、真下にいちばん近い都市・基地へ。速さはそのウェーブの速さの範囲の真ん中 */
+/**
+ * 落とす弾：機体の下の端から、真下にいちばん近い都市・基地へ。
+ * 速さは落とし方に決めた値（LLM-PBI-0021）。落とし方がなければ、そのウェーブの速さの範囲の真ん中
+ */
 export function dropMissile(a: Aircraft, wave: number): EnemyMissile {
   const t = targetBelow(a.x);
   const r = enemySpeedRange(wave);
-  return { fromX: a.x, fromY: a.y + spec(a.kind).height / 2, toX: t.x, toY: t.y, speed: (r.min + r.max) / 2, traveled: 0 };
+  const speed = a.drops?.[a.dropped]?.speed ?? (r.min + r.max) / 2;
+  return { fromX: a.x, fromY: a.y + spec(a.kind).height / 2, toX: t.x, toY: t.y, speed, traveled: 0 };
 }
 
 /** 爆風の円が機体の四角に重なるか（LLM-TC-0009-04） */
@@ -141,7 +199,7 @@ export function stepAircraft(
       destroyed.push(moved);
       continue;
     }
-    const due = dropsDue(a.kind, age);
+    const due = dueDrops(a, age);
     let next = moved;
     while (next.dropped < due) {
       drops.push(dropMissile(next, wave));
@@ -154,4 +212,4 @@ export function stepAircraft(
 }
 
 /** まだ落とす弾が残っているか（弾切れの判定 LLM-TC-0009-05） */
-export const hasDropsLeft = (a: Aircraft): boolean => a.dropped < aircraftDrops(a.kind);
+export const hasDropsLeft = (a: Aircraft): boolean => a.dropped < totalDrops(a);
