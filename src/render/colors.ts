@@ -19,4 +19,13 @@ export const COLORS = {
   hudTop: '#ffb347',
   ammo: '#8fd3ff',
   ammoEmpty: '#555555',
+  /** 爆撃機（LLM-GUI-0001 v1.9 §2）：胴・機首、主翼・尾翼、機首の灯り */
+  bomberBody: '#7d8fa8',
+  bomberWing: '#5c6b80',
+  /** 衛星（LLM-GUI-0001 v1.9 §2）：本体、太陽電池、その区切り */
+  satelliteBody: '#e8e0b0',
+  satellitePanel: '#3fb8af',
+  satellitePanelLine: '#1f6f69',
+  /** 爆撃機・衛星の灯り */
+  aircraftLight: '#ff5a3c',
 } as const;

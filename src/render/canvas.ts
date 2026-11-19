@@ -1,3 +1,4 @@
+import type { Aircraft } from '../core/aircraft';
 import { GROUND_Y, LOGICAL_HEIGHT, LOGICAL_WIDTH, MOUND_TOP_Y } from '../core/config';
 import { blastRadius, type Blast } from '../core/blast';
 import { enemyHead, IMPACT_STEPS, type EnemyMissile, type Impact } from '../core/enemy';
@@ -128,6 +129,40 @@ function drawEnemy(ctx: CanvasRenderingContext2D, m: EnemyMissile): void {
   ctx.fillRect(Math.round(h.x) - 1, Math.round(h.y) - 1, 2, 2);
 }
 
+/**
+ * 空の敵の形（LLM-GUI-0001 v1.9 §2。リファインメントのモックの形）。中心からの四角 [dx, dy, 幅, 高さ, 色] を、
+ * モックの 1 ドットを AIRCRAFT_SCALE の四角にして描く。爆撃機は右向きの形で、左へ進むときは左右を反す
+ */
+export const AIRCRAFT_SCALE = 1.5;
+type Part = readonly [number, number, number, number, string];
+export const BOMBER_PARTS: readonly Part[] = [
+  [-12, -1.5, 20, 4, COLORS.bomberBody], // 胴
+  [8, -0.5, 4, 2, COLORS.bomberBody], // 機首
+  [-4, -4.5, 8, 3, COLORS.bomberWing], // 主翼（上）
+  [-4, 2.5, 8, 3, COLORS.bomberWing], // 主翼（下）
+  [-12, -5.5, 3, 4, COLORS.bomberWing], // 尾翼
+  [6, -0.5, 2, 2, COLORS.aircraftLight], // 機首の灯り
+];
+export const SATELLITE_PARTS: readonly Part[] = [
+  [-11, -1.5, 7, 5, COLORS.satellitePanel], // 左の太陽電池
+  [4, -1.5, 7, 5, COLORS.satellitePanel], // 右の太陽電池
+  [-8, -1.5, 1, 5, COLORS.satellitePanelLine],
+  [7, -1.5, 1, 5, COLORS.satellitePanelLine],
+  [-3, -2.5, 6, 7, COLORS.satelliteBody], // 本体
+  [-1, -4.5, 2, 2, COLORS.aircraftLight], // 上の灯り
+];
+
+/** 爆撃機・衛星（LLM-PBI-0009） */
+function drawAircraft(ctx: CanvasRenderingContext2D, a: Aircraft): void {
+  const parts = a.kind === 'bomber' ? BOMBER_PARTS : SATELLITE_PARTS;
+  const flip = a.kind === 'bomber' && a.dir < 0;
+  for (const [dx, dy, w, h, color] of parts) {
+    const left = flip ? -(dx + w) : dx;
+    ctx.fillStyle = color;
+    ctx.fillRect(a.x + left * AIRCRAFT_SCALE, a.y + dy * AIRCRAFT_SCALE, w * AIRCRAFT_SCALE, h * AIRCRAFT_SCALE);
+  }
+}
+
 /** 敵が地面に着いた跡の小さな閃光（LLM-GUI-0001 §4：0.2 秒） */
 function drawImpact(ctx: CanvasRenderingContext2D, i: Impact): void {
   const r = 3 + 3 * (1 - i.age / IMPACT_STEPS);
@@ -196,6 +231,7 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, view: { 
   }
 
   for (const m of state.enemies) drawEnemy(ctx, m);
+  for (const a of state.aircraft ?? []) drawAircraft(ctx, a);
   for (const i of state.impacts) drawImpact(ctx, i);
   for (const m of state.interceptors) drawInterceptor(ctx, m);
   for (const b of state.blasts) drawBlast(ctx, b, state.step);
