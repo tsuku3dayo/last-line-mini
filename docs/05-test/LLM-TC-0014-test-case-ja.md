@@ -2,7 +2,7 @@
 id: LLM-TC-0014
 type: test-case
 title: 効果音と BGM が鳴る
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-19
 sources:
