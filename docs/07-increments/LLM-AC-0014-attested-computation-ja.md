@@ -2,7 +2,7 @@
 id: LLM-AC-0014
 type: attested-computation
 title: 効果音と BGM が鳴る
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-19
 sources:
@@ -11,12 +11,12 @@ sources:
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0050（スプリント 14。PR #96）
   - LLM-TASK-0051（スプリント 14。PR #97）
-verified: null
+verified: { by: オーナー, at: 2026-11-19T16:05:42+09:00 }
 ---
 
 # LLM-AC-0014 インクリメントの実施記録
 
-LLM-PBI-0014 が完成の定義（`docs/definition-of-done.md`）を満たしたことの記録。スプリント 14 のスプリントレビューで PO の受け入れを受ける。
+LLM-PBI-0014 が完成の定義（`docs/definition-of-done.md`）を満たしたことの記録。スプリント 14 のスプリントレビュー（2026-11-19 16:05:42）で PO が受け入れた。
 
 - 対象の版：プレビュー `v1.0.0 β ff561a8`（#97 のマージ `1a45d49` の公開が、#98〔文書だけ〕まで入った main を build した。コードは `1a45d49` と同じ）
 - 公開：GitHub Actions「Pages」run 44475379135（success、2026-11-19 15:58:00 ごろに終わり）→ https://tsuku3dayo.github.io/last-line-mini/preview/ 。番号は公開が終わったあとに読み取った（案 19）
