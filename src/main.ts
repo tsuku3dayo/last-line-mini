@@ -21,6 +21,8 @@ import { createNameEntry } from './app/name-entry';
 import { EMPTY_NAME, finalName, isValidName } from './core/name';
 import { loadRanking, rankingKey, saveRanking, type KeyValueStorage } from './storage/ranking-store';
 import { createAudio, formatCounts, soundsForStep, type SoundName } from './app/audio';
+import { bgmShouldPlay, createBgm } from './app/bgm';
+import { createSoundButton, loadSoundEnabled, saveSoundEnabled, soundKey } from './app/sound-button';
 
 // 組み立て（ここだけが全部の層を知る）。画面の流れ：タイトル → プレイ → 終わり → TOP10 → タイトル、タイトル ⇄ クレジット（LLM-GUI-0003 §0）
 const versionText = formatVersion(__APP_VERSION__, __APP_CHANNEL__, __APP_COMMIT__);
@@ -137,6 +139,23 @@ const credits = createCredits(stage, {
   canOpen: () => screen === 'title' && canLeaveScreen(screenStep),
 });
 
+// 音の ON／OFF（LLM-PBI-0014・GUI-0003 §8）。選んだ方は端末に覚える（初めは ON）。ボタンはタイトルにだけ出す
+const soundStoreKey = soundKey(__APP_CHANNEL__);
+audio.setEnabled(loadSoundEnabled(store, soundStoreKey));
+const soundButton = createSoundButton(stage, {
+  onToggle: () => {
+    audio.setEnabled(!audio.enabled);
+    saveSoundEnabled(store, soundStoreKey, audio.enabled);
+    soundButton.setEnabled(audio.enabled);
+    body.dataset.soundEnabled = audio.enabled ? 'on' : 'off';
+  },
+  canToggle: () => screen === 'title' && canLeaveScreen(screenStep),
+});
+soundButton.setEnabled(audio.enabled);
+body.dataset.soundEnabled = audio.enabled ? 'on' : 'off';
+// BGM（LLM-TC-0014-02）。描画のたびに、鳴らすか・速さを合わせる
+const bgm = createBgm(audio);
+
 /** 画面を切り替える。前の画面の操作が次の画面の 1 発にならないよう、たまった入力は捨てる */
 const goTo = (next: Screen) => {
   screen = next;
@@ -149,6 +168,7 @@ const goTo = (next: Screen) => {
     audio.play(['rankIn']); // ランクイン（LLM-TC-0014-01）
   } else nameEntry.hide();
   credits.setButtonVisible(creditButtonVisible(next));
+  soundButton.setVisible(next === 'title');
   credits.setScreenVisible(next === 'credits');
   refreshBanner();
 };
@@ -195,6 +215,8 @@ const draw = () => {
   const messages = screen === 'play' ? overlayTexts(state.wave, state.bonus) : screenTexts();
   if (screen === 'play') render(ctx, state, view);
   else renderScreen(ctx, messages, view);
+  bgm.update(bgmShouldPlay(screen, state.wave.status), state.wave.number);
+  body.dataset.bgm = bgm.playing ? `on:${bgm.tempo}` : 'off';
   // E2E が読む状態（テンプレート §5.4）。step はプレイ中はゲームの、ほかの画面では画面のステップ数
   body.dataset.step = String(screen === 'play' ? state.step : screenStep);
   body.dataset.ammo = state.bases.map((b) => b.ammo).join(',');

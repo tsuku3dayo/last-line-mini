@@ -153,6 +153,7 @@ body {
 /* クレジット（LLM-GUI-0003 §7。LLM-PBI-0013）。位置は src/app/credits-screen.ts が割合で決め、
    文字・余白は --u（論理の 1 の長さ。ゲーム画面の倍率）で決める */
 #credits-button,
+#sound-button,
 #credits-back {
   position: absolute;
   box-sizing: border-box;
@@ -175,7 +176,22 @@ body {
   font-weight: bold;
 }
 
+/* 音の ON／OFF（LLM-GUI-0003 §8。v1.4）：ON は緑、OFF は暗い灰色 */
+#sound-button {
+  border: 2px solid #6cff8a;
+  border-radius: calc(var(--u, 1px) * 6);
+  background: #05070f;
+  color: #6cff8a;
+  font-weight: bold;
+}
+
+#sound-button[data-sound="off"] {
+  border-color: #555555;
+  color: #555555;
+}
+
 #credits-button[hidden],
+#sound-button[hidden],
 #credits[hidden] {
   display: none;
 }
