@@ -7,11 +7,11 @@ status: stable
 version: 1.1
 updated: 2026-11-13
 sources:
-  - LLM-PG-0001（v1.1）
-  - LLM-IDK-0001（v1.3）心配ごと④
+  - LLM-PG-0001（v1.2）
+  - LLM-IDK-0001（v1.4）心配ごと④
   - LLM-PBI-0004（v1.0）
   - LLM-PBI-0008（v1.0）
-  - docs/spec/last-line-mini-spec.md (v1.2) §2・§3
+  - docs/spec/last-line-mini-spec.md (v1.3) §2・§3
 verified: { by: オーナー, at: 2026-11-13T17:56:28+09:00 }
 ---
 
