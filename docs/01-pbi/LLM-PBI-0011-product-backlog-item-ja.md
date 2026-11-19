@@ -8,7 +8,7 @@ version: 1.1
 updated: 2026-11-13
 sources:
   - LLM-PG-0001（v1.2）
-  - LLM-IDK-0001（v1.5）心配ごと④
+  - LLM-IDK-0001（v1.6）心配ごと④
   - LLM-PBI-0004（v1.0）
   - LLM-PBI-0008（v1.0）
   - docs/spec/last-line-mini-spec.md (v1.3) §2・§3
