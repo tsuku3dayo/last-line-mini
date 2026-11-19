@@ -114,6 +114,12 @@ for (const file of walk(dir)) {
   }
 }
 
+// 音のファイルを使わない（LLM-TC-0014-03。音は Web Audio の合成で作る。外の素材の権利が要らないように）
+const AUDIO_EXT = new Set(['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac', '.opus', '.weba']);
+for (const file of walk(dir)) {
+  if (AUDIO_EXT.has(extname(file).toLowerCase())) errors.push(`音のファイルが入っている（音は合成で作る決まり）: ${relative(dir, file)}`);
+}
+
 if (errors.length > 0) {
   console.error(`check-dist（${channel}）: ${errors.length} 件のエラー`);
   for (const e of errors) console.error(`  - ${e}`);

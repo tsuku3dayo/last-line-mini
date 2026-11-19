@@ -20,6 +20,7 @@ import { canLeaveScreen, messageLines, nameTexts, titleTexts, top10Texts, type S
 import { createNameEntry } from './app/name-entry';
 import { EMPTY_NAME, finalName, isValidName } from './core/name';
 import { loadRanking, rankingKey, saveRanking, type KeyValueStorage } from './storage/ranking-store';
+import { createAudio, formatCounts, soundsForStep, type SoundName } from './app/audio';
 
 // 組み立て（ここだけが全部の層を知る）。画面の流れ：タイトル → プレイ → 終わり → TOP10 → タイトル、タイトル ⇄ クレジット（LLM-GUI-0003 §0）
 const versionText = formatVersion(__APP_VERSION__, __APP_CHANNEL__, __APP_COMMIT__);
@@ -41,6 +42,14 @@ let state: GameState = createGame(chooseSeed(fixedSeed));
 let transform = { scale: 1, dpr: 1 };
 const input = createInput(stage);
 guardTouch();
+
+// 効果音（LLM-PBI-0014）。iPhone は触るまで音を出せないので、最初の操作（触る・クリック・キー）で始める（LLM-TC-0014-05）。
+// ボタンが pointerdown を止めても届くよう、捕まえる段（capture）で受ける。鳴らした回数は E2E が data-sounds で読む
+const audio = createAudio((counts) => {
+  body.dataset.sounds = formatCounts(counts);
+});
+window.addEventListener('pointerdown', () => audio.unlock(), { capture: true });
+window.addEventListener('keydown', () => audio.unlock(), { capture: true });
 
 // TOP10（LLM-PBI-0006）。localStorage はブラウザの設定によっては触るだけで例外になるので、使えなければ保存しない
 const NO_STORAGE: KeyValueStorage = { getItem: () => null, setItem: () => undefined };
@@ -135,8 +144,10 @@ const goTo = (next: Screen) => {
   input.read();
   body.dataset.screen = next;
   // 名前の入力欄は、名前の画面のときだけ出す。触った操作の中で出すので、iPhone でもキーボードが出る
-  if (next === 'name') nameEntry.show();
-  else nameEntry.hide();
+  if (next === 'name') {
+    nameEntry.show();
+    audio.play(['rankIn']); // ランクイン（LLM-TC-0014-01）
+  } else nameEntry.hide();
   credits.setButtonVisible(creditButtonVisible(next));
   credits.setScreenVisible(next === 'credits');
   refreshBanner();
@@ -153,7 +164,14 @@ const startGame = () => {
 // プレイ中はゲームを進める（入力を渡さなければ、キーボード・マウスから読む）。ほかの画面では画面の時間だけ進め、入力は捨てる
 const advanceBy = (steps: number, given?: StepInput) => {
   if (screen === 'play') {
-    for (let i = 0; i < steps; i++) state = step(state, given ?? input.read());
+    // 1 回の描画のあいだに起きたことの音を、同じ音は 1 回にまとめて鳴らす（LLM-TC-0014-01）
+    const sounds = new Set<SoundName>();
+    for (let i = 0; i < steps; i++) {
+      const prev = state;
+      state = step(state, given ?? input.read());
+      for (const s of soundsForStep(prev, state)) sounds.add(s);
+    }
+    audio.play([...sounds]);
   } else {
     screenStep += steps;
     input.read();
