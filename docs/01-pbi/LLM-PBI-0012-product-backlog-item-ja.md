@@ -11,7 +11,7 @@ sources:
   - LLM-IDK-0001（v1.5）問い 4・心配ごと⑦
   - docs/spec/ARCHITECTURE-TEMPLATE.md §5.9・§5.10・§6.2・§6.3
   - LLM-SA-0001（v1.0）§2
-  - LLM-GUI-0003（v1.3）§5・§6
+  - LLM-GUI-0003（v1.4）§5・§6
 verified: { by: オーナー, at: 2026-11-18T11:25:00+09:00 }
 ---
 
