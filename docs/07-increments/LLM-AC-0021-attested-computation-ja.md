@@ -2,7 +2,7 @@
 id: LLM-AC-0021
 type: attested-computation
 title: 空の敵が落とす弾の位置と速さが毎回変わる
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-19
 sources:
@@ -10,12 +10,12 @@ sources:
   - LLM-TC-0021（v1.0）
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0053（スプリント 15。PR #102）
-verified: null
+verified: { by: オーナー, at: 2026-11-19T17:00:27+09:00 }
 ---
 
 # LLM-AC-0021 インクリメントの実施記録
 
-LLM-PBI-0021 が完成の定義（`docs/definition-of-done.md`）を満たしたことの記録。スプリント 15 のスプリントレビューで PO の受け入れを受ける。
+LLM-PBI-0021 が完成の定義（`docs/definition-of-done.md`）を満たしたことの記録。スプリント 15 のスプリントレビュー（2026-11-19 17:00:27）で PO が受け入れ、v1.1.0 で本番に公開した。
 
 - 対象の版：プレビュー `v1.0.0 β 0d52223`（#102 のマージ `a12f748` の公開が、#103〔文書だけ〕まで入った main を build した。コードは `a12f748` と同じ）
 - 公開：GitHub Actions「Pages」run 44481256660（success、2026-11-19 16:42:54 ごろに終わり）→ https://tsuku3dayo.github.io/last-line-mini/preview/ 。番号は公開が終わったあとに読み取った（案 19）
