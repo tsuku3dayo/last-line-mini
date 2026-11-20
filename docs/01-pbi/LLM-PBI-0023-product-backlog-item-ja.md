@@ -7,8 +7,8 @@ status: stable
 version: 1.1
 updated: 2026-11-20
 sources:
-  - LLM-PG-0004（v1.0）
-  - LLM-IDK-0001（v1.9）
+  - LLM-PG-0004（v1.1）
+  - LLM-IDK-0001（v1.10）
   - docs/spec/last-line-mini-spec.md (v1.3) §6.1
 verified: { by: オーナー, at: 2026-11-20T15:16:04+09:00 }
 ---
