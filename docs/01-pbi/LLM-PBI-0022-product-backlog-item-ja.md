@@ -8,7 +8,7 @@ version: 1.0
 updated: 2026-11-20
 sources:
   - LLM-PG-0003（v1.2）
-  - LLM-IDK-0001（v1.8）
+  - LLM-IDK-0001（v1.9）
   - LLM-GUI-0003（v1.6）§10
   - docs/spec/last-line-mini-spec.md (v1.3) §5
 verified: { by: オーナー, at: 2026-11-20T11:29:24+09:00 }
