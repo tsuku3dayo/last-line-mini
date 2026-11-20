@@ -2,7 +2,7 @@
 id: LLM-AC-0022
 type: attested-computation
 title: ランキング（TOP10）のデータを消して、最初からにできる
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-20
 sources:
@@ -10,12 +10,12 @@ sources:
   - LLM-TC-0022（v1.0）
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0059（スプリント 17。PR #115）
-verified: null
+verified: { by: オーナー, at: 2026-11-20T11:54:00+09:00 }
 ---
 
 # LLM-AC-0022 インクリメントの実施記録
 
-LLM-PBI-0022 が完成の定義（`docs/definition-of-done.md`）を満たしたことの記録。受け入れはスプリント 17 のスプリントレビューで PO が決める。
+LLM-PBI-0022 が完成の定義（`docs/definition-of-done.md`）を満たしたことの記録。スプリント 17 のスプリントレビュー（2026-11-20 11:54:00）で PO が受け入れ、v1.2.0 で本番に公開した。
 
 - 対象の版：プレビュー `v1.1.0 β 35cc1b7`（#115 のマージ）
 - 公開：GitHub Actions「Pages」run 44662860390（success、2026-11-20 11:47:08 に終わり）→ https://tsuku3dayo.github.io/last-line-mini/preview/ 。番号は公開が終わったあとに読み取った（案 19）
