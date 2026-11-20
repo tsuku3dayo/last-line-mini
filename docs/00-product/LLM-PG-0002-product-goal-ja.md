@@ -6,7 +6,7 @@ status: stable
 version: 1.3
 updated: 2026-11-19
 sources:
-  - LLM-IDK-0001（v1.7）
+  - LLM-IDK-0001（v1.8）
   - LLM-PG-0001（v1.2）
   - docs/spec/last-line-mini-spec.md (v1.3) §4.1
 verified: { by: オーナー, at: 2026-11-19T17:29:31+09:00 }
