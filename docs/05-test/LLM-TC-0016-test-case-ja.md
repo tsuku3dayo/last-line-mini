@@ -7,7 +7,7 @@ version: 1.0
 updated: 2026-11-20
 sources:
   - LLM-PBI-0016（v1.0）
-  - LLM-GUI-0003（v1.5）§9
+  - LLM-GUI-0003（v1.6）§9
 verified: null
 ---
 
