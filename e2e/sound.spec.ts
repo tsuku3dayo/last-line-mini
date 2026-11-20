@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, openFrozen } from './helpers';
+import { advance, openFrozen, poke } from './helpers';
 
 /** タイトルで「♪ 音 ON／OFF」を触る・クリックする（タイトルが出てから約 1 秒たってから） */
 async function toggleSound(page: Page, isMobile: boolean): Promise<void> {
@@ -94,6 +94,77 @@ test('LLM-TC-0014-04 「♪ 音 ON／OFF」で切り替わり、OFF なら鳴ら
   await page.reload();
   await expect(page.locator('body')).toHaveAttribute('data-sound-enabled', 'off');
   await expect(page.locator('#sound-button')).toHaveText('♪ 音 OFF');
+});
+
+// タイトルの曲（LLM-PBI-0023）。曲そのものは実機で聞く（LLM-TC-0023-04）。ここでは data-bgm（どの曲を鳴らすと決めたか）を読む
+
+/** ボタンを触る・クリックする */
+async function press(page: Page, id: string, isMobile: boolean): Promise<void> {
+  const button = page.locator(id);
+  await expect(button).toBeVisible();
+  if (isMobile) await button.tap();
+  else await button.click();
+  await advance(page, 1);
+}
+
+test('LLM-TC-0023-03 最初に触るまでは鳴らない。タイトルで ON にするとすぐタイトルの曲。OFF では鳴らない', async ({ page, isMobile }) => {
+  await openFrozen(page, 1, { title: true });
+  const body = page.locator('body');
+  await advance(page, 121);
+  await expect(body).toHaveAttribute('data-bgm', 'off'); // まだ触っていない（ブラウザの決まり）
+  await toggleSound(page, isMobile); // 最初に触った（音を出せるようになる）→ OFF
+  await advance(page, 1);
+  await expect(body).toHaveAttribute('data-sound-enabled', 'off');
+  await expect(body).toHaveAttribute('data-bgm', 'off');
+  await press(page, '#sound-button', isMobile); // ON にする
+  await expect(body).toHaveAttribute('data-sound-enabled', 'on');
+  await expect(body).toHaveAttribute('data-bgm', 'title:90');
+  await expect(body).toHaveAttribute('data-screen', 'title'); // ゲームは始まらない
+});
+
+test('LLM-TC-0023-01 LLM-TC-0023-02 タイトルとクレジットでタイトルの曲、プレイで切り替わり、終わり・TOP10 では止まり、タイトルに戻ると鳴る', async ({ page, isMobile }) => {
+  await openFrozen(page, 1, { title: true });
+  const body = page.locator('body');
+  await advance(page, 121);
+  // 最初の操作：「♪」を 2 回（OFF → ON）。触ると音を出せるようになり、ON でタイトルの曲
+  await toggleSound(page, isMobile);
+  await press(page, '#sound-button', isMobile);
+  await expect(body).toHaveAttribute('data-bgm', 'title:90');
+  // クレジットでも止めない
+  await press(page, '#credits-button', isMobile);
+  await expect(body).toHaveAttribute('data-screen', 'credits');
+  await expect(body).toHaveAttribute('data-bgm', 'title:90');
+  await advance(page, 121);
+  await press(page, '#credits-back', isMobile);
+  await expect(body).toHaveAttribute('data-screen', 'title');
+  await expect(body).toHaveAttribute('data-bgm', 'title:90');
+  // タイトルを触って始める → プレイの曲に切り替わる（最初のタップで始まる動きは変わらない）
+  await advance(page, 121);
+  const box = await page.locator('#stage').boundingBox();
+  if (!box) throw new Error('ゲーム画面がない');
+  if (isMobile) await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height * 0.3);
+  else await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.3);
+  await expect(body).toHaveAttribute('data-screen', 'play');
+  await advance(page, 1);
+  await expect(body).toHaveAttribute('data-bgm', 'on:120');
+  // GAME OVER → 止まる。そのあとの TOP10（または名前の入力）でも鳴らさない
+  await page.evaluate(() => {
+    const api = window.__llm;
+    if (!api) throw new Error('テスト用の入口がない');
+    const s = api.getState();
+    api.setState({ ...s, wave: { ...s.wave, status: 'gameover', phaseStep: 0 } });
+  });
+  await expect(body).toHaveAttribute('data-bgm', 'off');
+  await advance(page, 600);
+  await poke(page, isMobile);
+  await advance(page, 1);
+  await expect(body).toHaveAttribute('data-screen', /^(top10|name)$/);
+  await expect(body).toHaveAttribute('data-bgm', 'off');
+  // タイトルに戻ると、またタイトルの曲
+  await page.evaluate(() => window.__llm?.title());
+  await advance(page, 1);
+  await expect(body).toHaveAttribute('data-screen', 'title');
+  await expect(body).toHaveAttribute('data-bgm', 'title:90');
 });
 
 test('LLM-TC-0014-04 スクリーンショット：タイトルの「♪ 音 ON」と「♪ 音 OFF」', async ({ page, isMobile }, info) => {

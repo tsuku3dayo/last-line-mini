@@ -22,7 +22,7 @@ import { EMPTY_NAME, finalName, isValidName } from './core/name';
 import { clearRanking, loadRanking, rankingKey, saveRanking, type KeyValueStorage } from './storage/ranking-store';
 import { clearButtonVisible, createClearRanking } from './app/clear-ranking';
 import { createAudio, formatCounts, soundsForStep, type SoundName } from './app/audio';
-import { bgmShouldPlay, createBgm } from './app/bgm';
+import { bgmLabel, bgmTrack, createBgm } from './app/bgm';
 import { createSoundButton, loadSoundEnabled, saveSoundEnabled, soundKey } from './app/sound-button';
 import { canPause, createPause, isPauseKey } from './app/pause';
 
@@ -296,10 +296,11 @@ const draw = () => {
   const messages = screen === 'play' ? overlayTexts(state.wave, state.bonus) : screenTexts();
   if (screen === 'play') render(ctx, state, view);
   else renderScreen(ctx, messages, view);
-  bgm.update(bgmShouldPlay(screen, state.wave.status, paused), state.wave.number);
+  // タイトル・クレジットはタイトルの曲、プレイ中はプレイの曲（LLM-TC-0023-01・02）
+  bgm.update(bgmTrack(screen, state.wave.status, paused), state.wave.number);
   // 「II」は終わりの表示が出たら消す（状態で変わるので描画のたびに合わせる）
   refreshPause();
-  body.dataset.bgm = bgm.playing ? `on:${bgm.tempo}` : 'off';
+  body.dataset.bgm = bgmLabel(bgm.track, bgm.playing, bgm.tempo);
   // E2E が読む状態（テンプレート §5.4）。step はプレイ中はゲームの、ほかの画面では画面のステップ数
   body.dataset.step = String(screen === 'play' ? state.step : screenStep);
   body.dataset.ammo = state.bases.map((b) => b.ammo).join(',');

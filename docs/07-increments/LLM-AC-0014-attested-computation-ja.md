@@ -7,7 +7,7 @@ version: 1.0
 updated: 2026-11-19
 sources:
   - LLM-PBI-0014（v1.0）
-  - LLM-TC-0014（v1.0）
+  - LLM-TC-0014（v1.1）
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0050（スプリント 14。PR #96）
   - LLM-TASK-0051（スプリント 14。PR #97）
