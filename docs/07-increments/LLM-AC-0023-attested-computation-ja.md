@@ -2,7 +2,7 @@
 id: LLM-AC-0023
 type: attested-computation
 title: タイトル画面で、プレイ中とは別の BGM が鳴る
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-20
 sources:
@@ -11,12 +11,12 @@ sources:
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0063（スプリント 18。PR #123）
   - LLM-TASK-0066（スプリント 18。PR #124。手戻り）
-verified: null
+verified: { by: オーナー, at: 2026-11-20T15:35:52+09:00 }
 ---
 
 # LLM-AC-0023 インクリメントの実施記録
 
-LLM-PBI-0023 が完成の定義（`docs/definition-of-done.md`）を満たしたことの記録。スプリント 18 のスプリントレビューで PO に受け入れを聞く。
+LLM-PBI-0023 が完成の定義（`docs/definition-of-done.md`）を満たしたことの記録。スプリント 18 のスプリントレビュー（2026-11-20 15:35:52）で PO が受け入れ、v1.3.0 で本番に公開した。
 
 - 対象の版：プレビュー `v1.2.0 β cfd89ac`（#124 のマージ）
 - 公開：GitHub Actions「Pages」run 44687609853（success、2026-11-20 15:27:38 に終わり）→ https://tsuku3dayo.github.io/last-line-mini/preview/ 。番号は公開が終わったあとに読み取った（案 19）
