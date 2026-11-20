@@ -13,8 +13,8 @@ export const BGM_NOTES: readonly number[] = [
   220, 0, 262, 294, 247, 0, 196, 0,
 ];
 
-/** BGM を鳴らすか：プレイ中で、終わっていない（CLEAR・GAME OVER で止まる。タイトルなどでは鳴らさない） */
-export const bgmShouldPlay = (screen: string, status: GameStatus): boolean => screen === 'play' && !isOver(status);
+/** BGM を鳴らすか：プレイ中で、終わっていない（CLEAR・GAME OVER で止まる。タイトルなどでは鳴らさない）。止めているあいだも鳴らさない（LLM-TC-0016-02） */
+export const bgmShouldPlay = (screen: string, status: GameStatus, paused = false): boolean => screen === 'play' && !isOver(status) && !paused;
 
 /** ウェーブの番号から速さ（拍／分） */
 export const bgmTempo = (wave: number): number => BGM_BASE_BPM + BGM_BPM_STEP * (Math.min(Math.max(wave, 1), WAVE_COUNT) - 1);

@@ -23,6 +23,7 @@ import { loadRanking, rankingKey, saveRanking, type KeyValueStorage } from './st
 import { createAudio, formatCounts, soundsForStep, type SoundName } from './app/audio';
 import { bgmShouldPlay, createBgm } from './app/bgm';
 import { createSoundButton, loadSoundEnabled, saveSoundEnabled, soundKey } from './app/sound-button';
+import { canPause, createPause, isPauseKey } from './app/pause';
 
 // 組み立て（ここだけが全部の層を知る）。画面の流れ：タイトル → プレイ → 終わり → TOP10 → タイトル、タイトル ⇄ クレジット（LLM-GUI-0003 §0）
 const versionText = formatVersion(__APP_VERSION__, __APP_CHANNEL__, __APP_COMMIT__);
@@ -156,10 +157,46 @@ body.dataset.soundEnabled = audio.enabled ? 'on' : 'off';
 // BGM（LLM-TC-0014-02）。描画のたびに、鳴らすか・速さを合わせる
 const bgm = createBgm(audio);
 
+// 一時停止（LLM-PBI-0016・GUI-0003 §9）。止めているあいだはゲームを 1 ステップも進めない。
+// 止めた・続けた操作がゲームの 1 発にならないよう、たまった入力は捨てる
+let paused = false;
+const pause = () => {
+  if (paused || !canPause(screen, state.wave.status)) return;
+  paused = true;
+  input.read();
+  draw();
+};
+const resume = () => {
+  if (!paused) return;
+  paused = false;
+  input.read();
+  draw();
+};
+const pauseUi = createPause(stage, {
+  onPause: pause,
+  onResume: resume,
+  // やめてタイトルへ：終わっていないプレイは TOP10 に入れない（recordIfOver は終わったときだけ入れる。LLM-TC-0016-06）
+  onQuit: () => {
+    if (!paused) return;
+    goTo('title');
+    draw();
+  },
+});
+const refreshPause = () => {
+  pauseUi.setButtonVisible(!paused && canPause(screen, state.wave.status));
+  pauseUi.setPausedVisible(paused);
+  body.dataset.paused = paused ? '1' : '0';
+};
+// アプリ・タブが隠れたら止める。戻っても「続ける」まで止まったまま（LLM-TC-0016-05）
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') pause();
+});
+
 /** 画面を切り替える。前の画面の操作が次の画面の 1 発にならないよう、たまった入力は捨てる */
 const goTo = (next: Screen) => {
   screen = next;
   screenStep = 0;
+  paused = false;
   input.read();
   body.dataset.screen = next;
   // 名前の入力欄は、名前の画面のときだけ出す。触った操作の中で出すので、iPhone でもキーボードが出る
@@ -171,6 +208,7 @@ const goTo = (next: Screen) => {
   soundButton.setVisible(next === 'title');
   credits.setScreenVisible(next === 'credits');
   refreshBanner();
+  refreshPause();
 };
 
 /** タイトルから WAVE 1 を始める。新しい乱数の種で（`?debug=1&seed=` のときは同じ種） */
@@ -181,9 +219,12 @@ const startGame = () => {
   goTo('play');
 };
 
-// プレイ中はゲームを進める（入力を渡さなければ、キーボード・マウスから読む）。ほかの画面では画面の時間だけ進め、入力は捨てる
+// プレイ中はゲームを進める（入力を渡さなければ、キーボード・マウスから読む）。ほかの画面では画面の時間だけ進め、入力は捨てる。
+// 止めているあいだは何も進めず、入力も捨てる（LLM-TC-0016-02）
 const advanceBy = (steps: number, given?: StepInput) => {
-  if (screen === 'play') {
+  if (screen === 'play' && paused) {
+    input.read();
+  } else if (screen === 'play') {
     // 1 回の描画のあいだに起きたことの音を、同じ音は 1 回にまとめて鳴らす（LLM-TC-0014-01）
     const sounds = new Set<SoundName>();
     for (let i = 0; i < steps; i++) {
@@ -215,7 +256,9 @@ const draw = () => {
   const messages = screen === 'play' ? overlayTexts(state.wave, state.bonus) : screenTexts();
   if (screen === 'play') render(ctx, state, view);
   else renderScreen(ctx, messages, view);
-  bgm.update(bgmShouldPlay(screen, state.wave.status), state.wave.number);
+  bgm.update(bgmShouldPlay(screen, state.wave.status, paused), state.wave.number);
+  // 「II」は終わりの表示が出たら消す（状態で変わるので描画のたびに合わせる）
+  refreshPause();
   body.dataset.bgm = bgm.playing ? `on:${bgm.tempo}` : 'off';
   // E2E が読む状態（テンプレート §5.4）。step はプレイ中はゲームの、ほかの画面では画面のステップ数
   body.dataset.step = String(screen === 'play' ? state.step : screenStep);
@@ -233,8 +276,8 @@ const draw = () => {
  * 名前の画面では何もしない（確定は Enter・OK だけ。入力欄の外を触ってもキーボードが閉じるだけ）
  */
 const poke = (): boolean => {
-  // 名前の画面・クレジットでは何もしない（クレジットから出るのは BACK と Esc だけ）
-  if (screen === 'name' || screen === 'credits') return false;
+  // 名前の画面・クレジット・止めているあいだは何もしない（クレジットから出るのは BACK と Esc だけ。止めた画面は「続ける」・「やめてタイトルへ」・Esc・P だけ）
+  if (screen === 'name' || screen === 'credits' || paused) return false;
   if (screen === 'play') {
     if (!canRestart(state.wave)) return false;
     recordIfOver();
@@ -263,6 +306,14 @@ window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       goTo('title');
       draw();
+    }
+    return;
+  }
+  // プレイ中の Esc・P で止める／続ける（LLM-TC-0016-03・04）。押しっぱなしのくり返しでは切り替えない
+  if (screen === 'play' && isPauseKey(e)) {
+    if (!e.repeat) {
+      if (paused) resume();
+      else pause();
     }
     return;
   }

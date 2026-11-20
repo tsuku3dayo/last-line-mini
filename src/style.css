@@ -290,3 +290,77 @@ body {
 #credits .credits-mit p {
   margin: 0 0 1em;
 }
+
+/* 一時停止（LLM-GUI-0003 §9。LLM-PBI-0016）。位置は src/app/pause.ts が割合で決め、文字は --u で決める */
+#pause-button,
+#pause-resume,
+#pause-quit {
+  position: absolute;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 2px solid #2a3a66;
+  border-radius: calc(var(--u, 1px) * 6);
+  background: #0f1830;
+  color: #e0e0e0;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", sans-serif;
+  font-size: max(12px, calc(var(--u, 1px) * 20));
+  font-weight: bold;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+}
+
+#pause-button {
+  font-size: max(12px, calc(var(--u, 1px) * 22));
+  opacity: 0.85;
+  z-index: 1;
+}
+
+#pause-resume {
+  border-color: #6cff8a;
+  background: #05070f;
+  color: #6cff8a;
+}
+
+#pause-button[hidden],
+#pause[hidden] {
+  display: none;
+}
+
+#pause {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 7, 15, 0.75);
+  color: #e0e0e0;
+  cursor: default;
+  z-index: 2;
+}
+
+#pause-title,
+#pause .pause-note {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+#pause-title {
+  color: #6cff8a;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: max(24px, calc(var(--u, 1px) * 56));
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  line-height: 1;
+}
+
+#pause .pause-note {
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", sans-serif;
+  font-size: max(10px, calc(var(--u, 1px) * 16));
+}
+
+#pause .pause-keys {
+  color: #9aa4c0;
+  font-size: max(9px, calc(var(--u, 1px) * 14));
+}
