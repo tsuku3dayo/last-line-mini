@@ -364,3 +364,73 @@ body {
   color: #9aa4c0;
   font-size: max(9px, calc(var(--u, 1px) * 14));
 }
+
+/* 記録を消す（LLM-GUI-0003 §10。LLM-PBI-0022）。位置は src/app/clear-ranking.ts が割合で決める */
+#clear-button,
+#clear-yes,
+#clear-no {
+  position: absolute;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 2px solid #ff5a3c;
+  border-radius: calc(var(--u, 1px) * 6);
+  background: #05070f;
+  color: #ff5a3c;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", sans-serif;
+  font-size: max(12px, calc(var(--u, 1px) * 20));
+  font-weight: bold;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+}
+
+#clear-button {
+  z-index: 1;
+}
+
+#clear-no {
+  border-color: #2a3a66;
+  background: #0f1830;
+  color: #e0e0e0;
+}
+
+#clear-button[hidden],
+#clear-confirm[hidden] {
+  display: none;
+}
+
+#clear-confirm {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 7, 15, 0.9);
+  color: #e0e0e0;
+  cursor: default;
+  z-index: 3;
+}
+
+#clear-title,
+#clear-confirm .clear-note {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", sans-serif;
+}
+
+#clear-title {
+  font-size: max(14px, calc(var(--u, 1px) * 26));
+  font-weight: bold;
+}
+
+#clear-confirm .clear-note {
+  color: #9aa4c0;
+  font-size: max(10px, calc(var(--u, 1px) * 16));
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+#clear-confirm .clear-keys {
+  font-size: max(9px, calc(var(--u, 1px) * 14));
+}

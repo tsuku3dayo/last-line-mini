@@ -15,6 +15,8 @@ export interface StoredRecord {
 export interface KeyValueStorage {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
+  /** 記録を消すときに使う（LLM-PBI-0022）。ない保存先では空の一覧を書く */
+  removeItem?(key: string): void;
 }
 
 const MAX = 10;
@@ -75,6 +77,20 @@ export function loadRanking(storage: KeyValueStorage, key: string, isName: (name
     return parseRanking(storage.getItem(key), isName);
   } catch {
     return [];
+  }
+}
+
+/**
+ * TOP10 の保存を消す（LLM-PBI-0022・LLM-TC-0022-04）。消すのは渡したキー（開いているチャンネル）だけで、
+ * 音の ON／OFF などほかのキーには触らない。消せなかったら false（遊ぶのは止めない）
+ */
+export function clearRanking(storage: KeyValueStorage, key: string): boolean {
+  try {
+    if (storage.removeItem) storage.removeItem(key);
+    else storage.setItem(key, '[]');
+    return true;
+  } catch {
+    return false;
   }
 }
 
