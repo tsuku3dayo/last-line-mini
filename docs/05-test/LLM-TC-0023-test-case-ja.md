@@ -3,7 +3,7 @@ id: LLM-TC-0023
 type: test-case
 title: タイトル画面で、プレイ中とは別の BGM が鳴る
 status: stable
-version: 1.0
+version: 1.1
 updated: 2026-11-20
 sources:
   - LLM-PBI-0023（v1.1）
