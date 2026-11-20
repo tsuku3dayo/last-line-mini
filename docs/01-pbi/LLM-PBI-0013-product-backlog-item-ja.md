@@ -8,9 +8,9 @@ version: 1.0
 updated: 2026-11-18
 sources:
   - LLM-PG-0001（v1.2）
-  - LLM-IDK-0001（v1.6）心配ごと②・⑥・⑧
+  - LLM-IDK-0001（v1.7）心配ごと②・⑥・⑧
   - docs/spec/last-line-mini-spec.md (v1.3) —（TEAM 5.1・OPTION 7「本番に公開するとき」）
-  - LLM-GUI-0003（v1.4）§7
+  - LLM-GUI-0003（v1.5）§7
 verified: { by: オーナー, at: 2026-11-18T17:08:37+09:00 }
 ---
 
