@@ -34,7 +34,7 @@
 | LLM-TASK-0063 | タイトルの BGM：`src/app/bgm.ts`（タイトルの曲〔90 拍・32 音・低め〕、画面と状態からどちらの曲かを決める純粋な関数、曲が変わったら最初から）、`src/main.ts`（`data-bgm` に `title:90`）、単体 `tests/unit/bgm.test.ts`（計画では audio.test.ts と書いたが、BGM の単体は bgm.test.ts にあった）、E2E `e2e/sound.spec.ts`（上限つき）・`e2e/pause.spec.ts` の確かめ、TC-0014 v1.1、README | PBI-0023 | TC-0023-01〜03 | — | feat/TASK-0063-title-bgm | 完了 | #123 |
 | LLM-TASK-0066 | 手戻り（実機確認の差し戻し 15:13:18「低音ということもあり、音がとても小さい音量に聞こえる」）：タイトルの曲の音の強さをプレイの約 2.5 倍にし、三角波に小さな矩形波を重ねる（`src/app/bgm.ts` の `trackVoice`）、単体、PBI-0023 v1.1（PO 承認 15:16:04）・TC-0023 v1.1 | PBI-0023 | TC-0023-01 | 0063 | fix/TASK-0066-title-bgm-volume | 完了 | #124 |
 | LLM-TASK-0064 | リリース v1.3.0（レビューで PO が本番に出すと決めたら）：`package.json` の版を 1.3.0、check-docs の厳しいモード、README の確かめ、PR の本文にタグの 1 行（案 29）、タグはオーナーが打つ（TEAM 3.2・OPTION 6.7） | PG-0004 | — | 0063・レビュー | release/v1.3.0 | 完了（本番 v1.3.0。15:47:32） | #126 |
-| LLM-TASK-0065 | PG-0004 の完了の作業（PO が「再現開発仕様書を最新にしてください」と言ったら）：再現開発仕様書の第 2 部（タイトルの曲）、README、summary に PG-0004 の YWT、PG-0004 の達成の記録、残りの一覧、次のゴールを聞く（TEAM 3.3・OPTION 6.8） | PG-0004 | — | 0064 | docs/product-goal-0004-completion | 未着手 | |
+| LLM-TASK-0065 | PG-0004 の完了の作業（PO が「再現開発仕様書を最新にしてください」と言ったら）：再現開発仕様書の第 2 部（タイトルの曲）、README、summary に PG-0004 の YWT、PG-0004 の達成の記録、残りの一覧、次のゴールを聞く（TEAM 3.3・OPTION 6.8） | PG-0004 | — | 0064 | docs/product-goal-0004-completion | 完了 | #128 |
 
 ### 確認 ID の割り当ての点検（TEAM 5.5）
 
