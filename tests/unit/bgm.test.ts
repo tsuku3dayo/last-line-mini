@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BGM_NOTES, TITLE_BPM, TITLE_NOTES, bgmLabel, bgmShouldPlay, bgmTempo, bgmTrack, createBgm, trackNotes, trackTempo } from '../../src/app/bgm';
+import { BGM_NOTES, TITLE_BPM, TITLE_NOTES, bgmLabel, bgmShouldPlay, bgmTempo, bgmTrack, createBgm, PLAY_VOLUME, trackNotes, trackTempo, trackVoice } from '../../src/app/bgm';
 import { loadSoundEnabled, saveSoundEnabled, SOUND_BUTTON, soundKey, soundLabel } from '../../src/app/sound-button';
 
 const memory = () => {
@@ -61,6 +61,14 @@ describe('タイトルの曲（LLM-PBI-0023）', () => {
     const playLow = Math.min(...BGM_NOTES.filter((n) => n > 0));
     expect(titleHigh).toBeLessThan(playLow);
     expect(TITLE_NOTES.filter((n) => n > 0).length).toBeGreaterThan(0);
+  });
+
+  it('LLM-TC-0023-01 タイトルの曲は低くて小さく聞こえるので、強さをプレイの約 2.5 倍にし矩形波を重ねる（v1.1）', () => {
+    expect(trackVoice('play')).toEqual({ volume: PLAY_VOLUME, edge: 0 });
+    const title = trackVoice('title');
+    expect(title.volume).toBeCloseTo(PLAY_VOLUME * 2.5);
+    expect(title.edge).toBeGreaterThan(0);
+    expect(title.edge).toBeLessThan(title.volume);
   });
 
   it('LLM-TC-0023-02 プレイ中はプレイの曲。終わり・止めた画面は鳴らさない（今までどおり）', () => {

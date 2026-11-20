@@ -31,6 +31,16 @@ export const TITLE_NOTES: readonly number[] = [
 /** どの曲を鳴らすか：鳴らさない・タイトルの曲・プレイの曲 */
 export type BgmTrack = 'none' | 'title' | 'play';
 
+/** プレイの曲の音の強さ（三角波） */
+export const PLAY_VOLUME = 0.035;
+
+/**
+ * 曲ごとの音色と強さ。タイトルの曲は低いので、同じ強さでは小さく聞こえる（スプリント 18 の実機確認の差し戻し）。
+ * 強さをプレイの約 2.5 倍にし、三角波に小さな矩形波を重ねて、小さなスピーカーでも聞こえるようにする（LLM-PBI-0023 v1.1）
+ */
+export const trackVoice = (track: BgmTrack): { volume: number; edge: number } =>
+  track === 'title' ? { volume: PLAY_VOLUME * 2.5, edge: PLAY_VOLUME * 0.6 } : { volume: PLAY_VOLUME, edge: 0 };
+
 /**
  * 画面と状態から曲を選ぶ。プレイ中で終わっていなければプレイの曲（止めているあいだは鳴らさない。LLM-TC-0016-02）、
  * タイトルとクレジットはタイトルの曲（LLM-TC-0023-01）、ほか（名前の入力・TOP10・プレイの終わり）は鳴らさない
@@ -76,18 +86,24 @@ export function createBgm(audio: SoundPlayer): Bgm {
   /** 予約した音（曲が変わったら止めて、2 つの曲が重ならないようにする。LLM-TC-0023-02） */
   let scheduled: { osc: OscillatorNode; end: number }[] = [];
 
-  const note = (ctx: AudioContext, freq: number, at: number, seconds: number) => {
-    if (freq <= 0) return;
+  const voice = (ctx: AudioContext, type: OscillatorType, volume: number, freq: number, at: number, seconds: number) => {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = 'triangle';
+    osc.type = type;
     osc.frequency.setValueAtTime(freq, at);
-    gain.gain.setValueAtTime(0.035, at);
+    gain.gain.setValueAtTime(volume, at);
     gain.gain.exponentialRampToValueAtTime(0.0001, at + seconds);
     osc.connect(gain).connect(ctx.destination);
     osc.start(at);
     osc.stop(at + seconds + 0.02);
     scheduled.push({ osc, end: at + seconds + 0.02 });
+  };
+
+  const note = (ctx: AudioContext, freq: number, at: number, seconds: number) => {
+    if (freq <= 0) return;
+    const { volume, edge } = trackVoice(current);
+    voice(ctx, 'triangle', volume, freq, at, seconds);
+    if (edge > 0) voice(ctx, 'square', edge, freq, at, seconds);
   };
 
   const cancelScheduled = () => {
