@@ -2,7 +2,7 @@
 id: LLM-AC-0016
 type: attested-computation
 title: 遊んでいる途中で止め、続きから遊べる（ボタンと、アプリを離れたとき）
-status: review
+status: stable
 version: 1.0
 updated: 2026-11-20
 sources:
@@ -10,12 +10,12 @@ sources:
   - LLM-TC-0016（v1.0）
   - LLM-TC-9001（v1.6）
   - LLM-TASK-0057（スプリント 16。PR #110）
-verified: null
+verified: { by: オーナー, at: 2026-11-20T11:17:00+09:00 }
 ---
 
 # LLM-AC-0016 インクリメントの実施記録
 
-LLM-PBI-0016 が完成の定義（`docs/definition-of-done.md`）を満たしたことの記録。受け入れはスプリント 16 のスプリントレビューで PO が決める。
+LLM-PBI-0016 が完成の定義（`docs/definition-of-done.md`）を満たしたことの記録。スプリント 16 のスプリントレビュー（2026-11-20 11:17:00）で PO が受け入れた。本番には、PBI-0022 とそろえて v1.2.0 で出す。
 
 - 対象の版：プレビュー `v1.1.0 β 54d6543`（#110 のマージ）
 - 公開：GitHub Actions「Pages」run 44658347115（success、2026-11-20 11:08:29 に終わり）→ https://tsuku3dayo.github.io/last-line-mini/preview/ 。番号は公開が終わったあとに読み取った（案 19）
