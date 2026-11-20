@@ -19,7 +19,8 @@ import { canRestart, overlayTexts } from './render/overlay';
 import { canLeaveScreen, messageLines, nameTexts, titleTexts, top10Texts, type Screen } from './render/screens';
 import { createNameEntry } from './app/name-entry';
 import { EMPTY_NAME, finalName, isValidName } from './core/name';
-import { loadRanking, rankingKey, saveRanking, type KeyValueStorage } from './storage/ranking-store';
+import { clearRanking, loadRanking, rankingKey, saveRanking, type KeyValueStorage } from './storage/ranking-store';
+import { clearButtonVisible, createClearRanking } from './app/clear-ranking';
 import { createAudio, formatCounts, soundsForStep, type SoundName } from './app/audio';
 import { bgmShouldPlay, createBgm } from './app/bgm';
 import { createSoundButton, loadSoundEnabled, saveSoundEnabled, soundKey } from './app/sound-button';
@@ -94,6 +95,9 @@ const recordIfOver = () => {
 /** 今の画面と、その画面が出てからのステップ数（タイトル・TOP10 の点滅と、約 1 秒の受け付けない時間に使う） */
 let screen: Screen = 'title';
 let screenStep = 0;
+/** タイトルの上に「記録を消す」の確かめる画面を出しているか（LLM-PBI-0022）と、出てからのステップ数（約 1 秒は押せない） */
+let confirming = false;
+let confirmStep = 0;
 
 /** 名前を確定したら：ランクインした行の名前を書き換えて保存し、TOP10 の画面へ（LLM-TC-0007-03） */
 const confirmName = (raw: string) => {
@@ -118,7 +122,8 @@ let updateWaiting = false;
 let applyUpdate = () => {};
 const banner = createUpdateBanner(stage, () => applyUpdate());
 const refreshBanner = () => {
-  const visible = bannerVisible(screen, updateWaiting);
+  // 確かめる画面のあいだは帯を隠す（GUI-0003 §10）
+  const visible = bannerVisible(screen, updateWaiting) && !confirming;
   banner.setVisible(visible);
   body.dataset.update = visible ? 'shown' : updateWaiting ? 'waiting' : 'none';
 };
@@ -154,6 +159,41 @@ const soundButton = createSoundButton(stage, {
 });
 soundButton.setEnabled(audio.enabled);
 body.dataset.soundEnabled = audio.enabled ? 'on' : 'off';
+
+// 記録を消す（LLM-PBI-0022・GUI-0003 §10）。タイトルの「記録を消す」→ 確かめる画面 →「消す」で開いているチャンネルの TOP10 だけを消す
+const clearUi = createClearRanking(stage, {
+  onOpen: () => {
+    if (screen !== 'title' || confirming || !canLeaveScreen(screenStep) || ranking.length === 0) return;
+    confirming = true;
+    confirmStep = 0;
+    input.read();
+    refreshTitleButtons();
+    draw();
+  },
+  // 確かめる画面が出てから約 1 秒は押せない（「記録を消す」を押した同じ操作で消さないように。LLM-TC-0022-02）
+  onYes: () => {
+    if (!confirming || !canLeaveScreen(confirmStep)) return;
+    clearRanking(store, rankingStoreKey);
+    ranking = [];
+    lastRank = null;
+    goTo('title');
+    draw();
+  },
+  onNo: () => {
+    if (!confirming || !canLeaveScreen(confirmStep)) return;
+    goTo('title');
+    draw();
+  },
+});
+/** タイトルのボタン（音・クレジット・記録を消す）と確かめる画面を、今の画面に合わせる */
+const refreshTitleButtons = () => {
+  credits.setButtonVisible(creditButtonVisible(screen) && !confirming);
+  soundButton.setVisible(screen === 'title' && !confirming);
+  clearUi.setButtonVisible(!confirming && clearButtonVisible(screen, ranking.length));
+  clearUi.setConfirm(confirming ? ranking.length : null);
+  body.dataset.clear = confirming ? 'confirm' : 'none';
+  refreshBanner();
+};
 // BGM（LLM-TC-0014-02）。描画のたびに、鳴らすか・速さを合わせる
 const bgm = createBgm(audio);
 
@@ -197,6 +237,7 @@ const goTo = (next: Screen) => {
   screen = next;
   screenStep = 0;
   paused = false;
+  confirming = false;
   input.read();
   body.dataset.screen = next;
   // 名前の入力欄は、名前の画面のときだけ出す。触った操作の中で出すので、iPhone でもキーボードが出る
@@ -204,10 +245,8 @@ const goTo = (next: Screen) => {
     nameEntry.show();
     audio.play(['rankIn']); // ランクイン（LLM-TC-0014-01）
   } else nameEntry.hide();
-  credits.setButtonVisible(creditButtonVisible(next));
-  soundButton.setVisible(next === 'title');
   credits.setScreenVisible(next === 'credits');
-  refreshBanner();
+  refreshTitleButtons();
   refreshPause();
 };
 
@@ -235,6 +274,7 @@ const advanceBy = (steps: number, given?: StepInput) => {
     audio.play([...sounds]);
   } else {
     screenStep += steps;
+    if (confirming) confirmStep += steps;
     input.read();
   }
   return state;
@@ -277,7 +317,8 @@ const draw = () => {
  */
 const poke = (): boolean => {
   // 名前の画面・クレジット・止めているあいだは何もしない（クレジットから出るのは BACK と Esc だけ。止めた画面は「続ける」・「やめてタイトルへ」・Esc・P だけ）
-  if (screen === 'name' || screen === 'credits' || paused) return false;
+  // 記録を消す確かめる画面のあいだも何もしない（「消す」・「やめる」・Esc だけ。LLM-TC-0022-03）
+  if (screen === 'name' || screen === 'credits' || paused || confirming) return false;
   if (screen === 'play') {
     if (!canRestart(state.wave)) return false;
     recordIfOver();
@@ -304,6 +345,14 @@ window.addEventListener('keydown', (e) => {
   // クレジットは Esc でタイトルに戻る。ほかのキーでは何もしない（LLM-TC-0013-03）
   if (screen === 'credits') {
     if (e.key === 'Escape') {
+      goTo('title');
+      draw();
+    }
+    return;
+  }
+  // 確かめる画面は Esc で「やめる」（約 1 秒たってから）。ほかのキーでは何もしない（LLM-TC-0022-03）
+  if (confirming) {
+    if (e.key === 'Escape' && canLeaveScreen(confirmStep)) {
       goTo('title');
       draw();
     }
